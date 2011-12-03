@@ -1,0 +1,179 @@
+*** NOTES AND WARNINGS / READ FIRST ***
+
+This library is research-level software which is in development. 
+This is NOT a release version. For sure, features will be added, 
+bugs will be fixed and the API will change in the future.
+
+Even thought the software is in principal designed to run cross-plattfrom,
+it most likely will only work on a recent 64-bit linux (without the need
+of adaptations...) It was tested on Ubuntu 11.10 - 64 bit.
+
+(Note there might be problems on 32bit linux related to Eigen3.
+ http://eigen.tuxfamily.org/dox/TopicUnalignedArrayAssert.html.
+ I followed the guide describe on this website, but I have not tested it on 
+ 32-bit linux yet. Any bug reports/patches are welcome!)
+
+WARNING: There is a bug concerning Eigen3 and gcc/g++-4.4. Do not compile
+ScaViSLAM, g2o, etc. using gcc/g++-4.4! It will compile but might produce wrong
+results! To find out your compiler version type "g++ -v".
+see: 
+  http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2011/04/msg00013.html
+&
+ http://comments.gmane.org/gmane.comp.lib.eigen/2046
+ (Yes, CUDA 4.0 requires gcc/g++-4.4. Simply set the default compiler to 
+  gcc/g++-4.5 or 4.6..., but compile your CUDA code using gcc/g++-4.4, e.g. 
+  see http://hdfpga.blogspot.com/2011/05/install-cuda-40-on-ubuntu-1104.html)
+
+
+***INSTALLATION***
+
+First download sample image sequences. This will take a while, so do it first.
+(These are already rectified stereo images from the New College dataset: 
+http://www.robots.ox.ac.uk/NewCollegeData/)
+
+>>
+cd MY_DATA_DIRECTORY
+mkdir newcollege
+cd newcollege
+wget -nH --cut-dirs=4 -r -l2 --no-parent -A "*.pnm" http://pub1.willowgarage.com/~konolige/data/NewCollege/FullData/StereoImages_1225720041.455302_to_1225720118.251935 
+wget -nH --cut-dirs=4 -r -l2 --no-parent -A "*.pnm" http://pub1.willowgarage.com/~konolige/data/NewCollege/FullData/StereoImages_1225720118.301927_to_1225720193.248630
+wget -nH --cut-dirs=4 -r -l2 --no-parent -A "*.pnm" http://pub1.willowgarage.com/~konolige/data/NewCollege/FullData/StereoImages_1225720193.298630_to_1225720268.945303
+<<
+
+Now, checkout/clone the ScaViSLAM repository.
+
+>>
+cd MY_SOFTWARE_DIRECTORY
+git clone git@github.com:strasdat/ScaViSLAM.git
+<<
+
+Now, enter the project directory
+
+>>
+cd ScaViSLAM
+<<
+
+and then  enter the directory for EXTERNAL libraries:
+
+>>
+cd EXTERNAL
+<<
+
+The ScaViSLAM build system is designed in a way such that all 
+dependencies are installed locally in a sub-folder. In this way we avoid
+version conflicts (e.g. different OpenCV version which might be installed
+system-wide). Please follow the guide step by step and only deviate form 
+it if you reallty know what you are doing ;-)
+
+Check out and install g2o (revision 22):
+
+>>
+svn co -r 22 https://svn.openslam.org/data/svn/g2o/trunk g2o
+cd g2o
+mkdir svs_build
+cd svs_build
+cmake ..
+make
+cd ../..
+<<
+
+Download and install opencv (version 2.3.1a) inside EXTERNAL:
+
+>>
+wget http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.3.1/OpenCV-2.3.1a.tar.bz2
+tar xvf OpenCV-2.3.1a.tar.bz2
+mv OpenCV-2.3.1 opencv2
+cd opencv
+mkdir svs_build
+cd svs_build
+cmake ..
+<<
+
+If you wish to use CUDA support, which is highly recommended, make
+sure OpenCV recognizes CUDA ("Use Cuda:                   YES").
+
+>>
+make 
+<<
+
+In case you get an compiler error in "cap_ffmpeg.cpp", simply 
+deactive "USE_FFMPEF", e.g. using cmake-gui.
+
+>>
+cd ../..
+<<
+
+Download eigen (version 3.0.3) in folder EXTERNAL
+
+>>
+wget http://bitbucket.org/eigen/eigen/get/3.0.3.tar.bz2
+tar xvf 3.0.3.tar.bz2
+mv eigen-eigen-3.0.3/ eigen3
+<<
+
+Clone and install Pangolin (68d75c2d54450d90efd2e6e2cfcd72a6a599ef58)
+
+>>
+git  clone -v https://github.com/stevenlovegrove/Pangolin.git
+cd Pangolin
+git checkout 68d75c2d54450d90efd2e6e2cfcd72a6a599ef58
+mkdir svs_build
+cd svs_build
+cmake ..
+make //or "make -j8"
+cd ../..
+<<
+
+Clone and install Sophus in folder EXTERNAL
+
+>>
+git clone git@github.com:strasdat/Sophus.git
+cd Sophus
+mkdir svs_build
+cd svs_build
+cmake ../src
+make 
+cd ../..
+<<
+
+Install VisionTools in folder EXTERNAL
+
+>>
+git clone git@github.com:strasdat/VisionTools.git
+cd VisionTools
+mkdir svs_build
+cd svs_build
+cmake ../src
+make 
+<<
+
+Move to main project folder "ScaViSLAM" and install ScaViSLAM:
+
+>>
+cd ../../../
+mkdir svs_build
+cd svs_build
+<<
+
+In case you would like to compile ScaViSLAM WITHOUT CUDA support, open 
+"../src/CMakeLists.txt" using your favorite editor and change 
+"SET(CUDA_SUPPORT ON)" --> "SET(CUDA_SUPPORT ON)".
+
+>>
+cmake ../src
+make 
+<<
+
+Make sure the "New College" data set is downloaded completely.
+Then add a sym-link inside "ScaViSLAM/data":
+
+>>
+cd ../data
+ln -s PATH_TO_MY_DATA_DIRECTORY/newcollege newcollege
+<<
+
+Run ScaViSLAM on new college image sequence:
+>>
+cd ../svs_build
+./stereo_slam ../data/newcollege.cfg
+<<
