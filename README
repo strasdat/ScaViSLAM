@@ -1,12 +1,12 @@
 *** NOTES AND WARNINGS / READ FIRST ***
 
-This library is research-level software which is in development. 
+This library is a research-level software which is in development. 
 This is NOT a release version. For sure, features will be added, 
 bugs will be fixed and the API will change in the future.
 
-Even thought the software is in principal designed to run cross-plattfrom,
+Even thought the software is in principal designed to run cross-platform,
 it most likely will only work on a recent 64-bit linux (without the need
-of adaptations...) It was tested on Ubuntu 11.10 - 64 bit.
+of adaptations...). It was tested on Ubuntu 11.10 - 64 bit.
 
 (Note there might be problems on 32bit linux related to Eigen3.
  http://eigen.tuxfamily.org/dox/TopicUnalignedArrayAssert.html.
@@ -15,14 +15,12 @@ of adaptations...) It was tested on Ubuntu 11.10 - 64 bit.
 
 WARNING: There is a bug concerning Eigen3 and gcc/g++-4.4. Do not compile
 ScaViSLAM, g2o, etc. using gcc/g++-4.4! It will compile but might produce wrong
-results! To find out your compiler version type "g++ -v".
+results! (Detailed instructions are listed below.)
 see: 
   http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2011/04/msg00013.html
 &
  http://comments.gmane.org/gmane.comp.lib.eigen/2046
- (Yes, CUDA 4.0 requires gcc/g++-4.4. Simply set the default compiler to 
-  gcc/g++-4.5 or 4.6..., but compile your CUDA code using gcc/g++-4.4, e.g. 
-  see http://hdfpga.blogspot.com/2011/05/install-cuda-40-on-ubuntu-1104.html)
+ 
 
 
 ***INSTALLATION***
@@ -40,6 +38,51 @@ wget -nH --cut-dirs=4 -r -l2 --no-parent -A "*.pnm" http://pub1.willowgarage.com
 wget -nH --cut-dirs=4 -r -l2 --no-parent -A "*.pnm" http://pub1.willowgarage.com/~konolige/data/NewCollege/FullData/StereoImages_1225720193.298630_to_1225720268.945303
 <<
 
+Before we start with the installation, we need to perform some preparations.
+ScaViSLAM comes with GPU support. Indeed, GPU support is the default option.
+(Each GPU method has a CPU equivalent. However those are not tested very much).
+Thus, there is an optional dependency on CUDA 4.0 or higher.
+
+First, find out your compiler version by typing "g++ -v".
+There are three options:
+
+ Version 4.5 or higher: Everything is fine. 
+  However, CUDA requires gcc 4.4. If you want to use CUDA and you have not 
+  done it yet, proceed with the following steps:
+   1. <<
+        sudo apt-get install gcc-4.4 g++-4.4 
+      >>
+   2. >>
+        sudo mkdir /usr/local/bin/gnuc4.4
+        sudo ln -s /usr/bin/gcc-4.4 /usr/local/bin/gnuc4.4/gcc
+        sudo ln -s /usr/bin/g++-4.4 /usr/local/bin/gnuc4.4/g++
+        sudo ln -s /usr/bin/c++-4.4 /usr/local/bin/gnuc4.4/c++
+      <<
+   3. Then, add the line "compiler-bindir=/usr/local/bin/gnuc4.4" to
+      "/usr/local/cuda/bin/nvcc.profile".
+  (Description how to install CUDA 4.0 on a newer version of Ubuntu:
+   http://hdfpga.blogspot.com/2011/05/install-cuda-40-on-ubuntu-1104.html)
+
+ Version 4.4: Because of the problem with Eigen (see above), you NEED to install 
+  a newer version of gcc and g++ (4.5, 4.6 ,4.7 ...). Make sure that ScaViSLAM 
+  and all EXTERNAL dependencies are compiled with the newer version. Note, that
+  CUDA 4.0 still depends on gcc 4.4. 
+  (One option is to set the default compilers to 4.5. Thus, "gcc -v", "g++ -v" and
+   "c++ -v" will report 4.5 and you can proceed which the steps 2.-3. above.) 
+
+ Version 4.3 or lower: You are using an old or custom version of linux. This is
+  not supported by this installation guideline. 
+  (It might work, but I guess you have to disable CUDA support.)
+
+Next, install dependencies:
+
+>>
+sudo apt-get install freeglut3-dev libglu-dev libglew-dev
+<<
+
+(This is an incomplete list at the moment, since it is hard to guess which 
+ libraries are installed by default on your linux distribution...)
+
 Now, checkout/clone the ScaViSLAM repository.
 
 >>
@@ -53,9 +96,10 @@ Now, enter the project directory
 cd ScaViSLAM
 <<
 
-and then  enter the directory for EXTERNAL libraries:
+and then create and enter the directory for EXTERNAL libraries:
 
 >>
+mkdir EXTERNAL
 cd EXTERNAL
 <<
 
@@ -63,7 +107,7 @@ The ScaViSLAM build system is designed in a way such that all
 dependencies are installed locally in a sub-folder. In this way we avoid
 version conflicts (e.g. different OpenCV version which might be installed
 system-wide). Please follow the guide step by step and only deviate form 
-it if you reallty know what you are doing ;-)
+it if you really know what you are doing ;-)
 
 Check out and install g2o (revision 22):
 
@@ -73,7 +117,7 @@ cd g2o
 mkdir svs_build
 cd svs_build
 cmake ..
-make
+make -j8
 cd ../..
 <<
 
@@ -83,27 +127,29 @@ Download and install opencv (version 2.3.1a) inside EXTERNAL:
 wget http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.3.1/OpenCV-2.3.1a.tar.bz2
 tar xvf OpenCV-2.3.1a.tar.bz2
 mv OpenCV-2.3.1 opencv2
-cd opencv
+cd opencv2
 mkdir svs_build
 cd svs_build
 cmake ..
 <<
 
 If you wish to use CUDA support, which is highly recommended, make
-sure OpenCV recognizes CUDA ("Use Cuda:                   YES").
+sure OpenCV recognizes CUDA ("Use Cuda:                   YES"
+in "Other third-party libraries" section). Note that CUDA 4.0 or higher is
+required.
 
 >>
-make 
+make -j8
 <<
 
 In case you get an compiler error in "cap_ffmpeg.cpp", simply 
-deactive "USE_FFMPEF", e.g. using cmake-gui.
+deactivate "USE_FFMPEF", e.g. using cmake-gui.
 
 >>
 cd ../..
 <<
 
-Download eigen (version 3.0.3) in folder EXTERNAL
+Download Eigen (version 3.0.3) in folder EXTERNAL
 
 >>
 wget http://bitbucket.org/eigen/eigen/get/3.0.3.tar.bz2
@@ -120,7 +166,7 @@ git checkout 68d75c2d54450d90efd2e6e2cfcd72a6a599ef58
 mkdir svs_build
 cd svs_build
 cmake ..
-make //or "make -j8"
+make -j8
 cd ../..
 <<
 
@@ -132,7 +178,7 @@ cd Sophus
 mkdir svs_build
 cd svs_build
 cmake ../src
-make 
+make -j8
 cd ../..
 <<
 
@@ -144,7 +190,7 @@ cd VisionTools
 mkdir svs_build
 cd svs_build
 cmake ../src
-make 
+make -j8
 <<
 
 Move to main project folder "ScaViSLAM" and install ScaViSLAM:
@@ -156,12 +202,12 @@ cd svs_build
 <<
 
 In case you would like to compile ScaViSLAM WITHOUT CUDA support, open 
-"../src/CMakeLists.txt" using your favorite editor and change 
-"SET(CUDA_SUPPORT ON)" --> "SET(CUDA_SUPPORT ON)".
+"../src/CMakeLists.txt" using your favourite editor and change 
+"SET(CUDA_SUPPORT ON)" --> "SET(CUDA_SUPPORT OFF)".
 
 >>
 cmake ../src
-make 
+make -j8
 <<
 
 Make sure the "New College" data set is downloaded completely.
