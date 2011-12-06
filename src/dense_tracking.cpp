@@ -39,8 +39,10 @@ DenseTracker
     dev_residual_img[level].create(mat_size, CV_32FC4);
     dev_residual_img[level].setTo(cv::Scalar(0,0,0,1));
 #else
-    ref_dense_points_[level].create(mat_size, CV_32FC4);
-    residual_img[level].create(mat_size, CV_32FC4);
+    ref_dense_points_[level].create(mat_size.height/EVERY_NTH_PIXEL,
+                                    mat_size.width/EVERY_NTH_PIXEL, CV_32FC4);
+    residual_img[level].create(mat_size.height/EVERY_NTH_PIXEL,
+                               mat_size.width/EVERY_NTH_PIXEL, CV_32FC4);
     residual_img[level].setTo(cv::Scalar(0,0,0,1));
 #endif
   }
@@ -207,67 +209,175 @@ void DenseTracker
 
 #else
 
+
+// ToDo: method too long (Implement abstract class for LM!)
 void DenseTracker
 ::denseTrackingCpu(SE3 * T_cur_from_actkey)
 {
-  for (int level = NUM_PYR_LEVELS-1; level>=1; --level)
+  for (int level = NUM_PYR_LEVELS-1; level>=0; --level)
   {
     const StereoCamera & cam
         = frame_data_.cam_vec[level];
-
-    for (int i = 0; i<10; ++i)
+    float chi2 = 0;
+    for (int v=0; v<ref_dense_points_[level].size().height; ++v)
     {
-      Matrix6d H;
-      H.setZero();
-      Vector6d Jres;
-      Jres.setZero();
-
-      for (int v=0; v<cam.height(); ++v)
+      for (int u=0; u<ref_dense_points_[level].size().width; ++u)
       {
-        for (int u=0; u<cam.width(); ++u)
+        cv::Vec4f cv_float4 = ref_dense_points_[level].at<cv::Vec4f>(v,u);
+        if (cv_float4[3]>0)
         {
-          cv::Vec4f cv_float4 = ref_dense_points_[level].at<cv::Vec4f>(v,u);
-          if (cv_float4[3]>0)
+          Vector3d xyz_prev(cv_float4[0], cv_float4[1], cv_float4[2]);
+          Vector3d xyz_cur = (*T_cur_from_actkey)*xyz_prev;
+          Vector2f uv_cur = cam.map(project2d(xyz_cur)).cast<float>();
+          if (cam.isInFrame(uv_cur.cast<int>(),2))
           {
-            Vector3d xyz_prev(cv_float4[0], cv_float4[1], cv_float4[2]);
-            Vector3d xyz_cur = (*T_cur_from_actkey)*xyz_prev;
-            Vector2f uv_cur = cam.map(project2d(xyz_cur)).cast<float>();
-            if (cam.isInFrame(uv_cur.cast<int>(),2))
+            float intensity_prev
+                = (1./255.)*frame_data_.prev_left()
+                .pyr_uint8[level].at<uint8_t>(v*EVERY_NTH_PIXEL,
+                                              u*EVERY_NTH_PIXEL);
+            float intensity_cur
+                = interpolateMat_32f(frame_data_.pyr_float32[level], uv_cur);
+            float res = intensity_prev-intensity_cur;
+            if (res > 0.1)
             {
-              float intensity_prev
-                  = (1./255.)*frame_data_.prev_left()
-                  .pyr_uint8[level].at<uint8_t>(v,u);
-              float intensity_cur
-                  = interpolateMat_32f(frame_data_.pyr_float32[level], uv_cur);
-              float dx
-                  = 0.5*interpolateMat_32f(frame_data_.pyr_float32_dx[level],
-                                           uv_cur);
-              float dy
-                  = 0.5*interpolateMat_32f(frame_data_.pyr_float32_dy[level],
-                                           uv_cur);
-              float res = intensity_prev-intensity_cur;
-              Matrix<double,2,6> frame_jac;
-              frame_jac_xyz2uv(xyz_cur, cam.focal_length(), frame_jac);
-              Vector6d J = dx*frame_jac.row(0) + dy*frame_jac.row(1);
-              H += J*J.transpose();
-              Jres += J*res;
-              float v = max(0.f, 1-50.f*res*res);
-              cv_float4 =  cv::Vec4f(v, v, v, 1.f);
+              res = 0.1;
+            }
+            if (res < -0.1)
+            {
+              res = -0.1;
+            }
+            chi2 += res*res;
+          }
+        }
+      }
+    }
+
+    double nu = 2;
+    bool stop = false;
+    double mu = 0.01f;
+    int trial = 0;
+    SE3 T_cur_from_actkey_new;
+
+    for (int i = 0; i<15; ++i)
+    {
+      double rho = 0;
+      do
+      {
+        Matrix6d H;
+        H.setZero();
+        Vector6d Jres;
+        Jres.setZero();
+
+        for (int v=0; v<ref_dense_points_[level].size().height; ++v)
+        {
+          for (int u=0; u<ref_dense_points_[level].size().width; ++u)
+          {
+            cv::Vec4f cv_float4 = ref_dense_points_[level].at<cv::Vec4f>(v,u);
+            if (cv_float4[3]>0)
+            {
+              Vector3d xyz_prev(cv_float4[0], cv_float4[1], cv_float4[2]);
+              Vector3d xyz_cur = (*T_cur_from_actkey)*xyz_prev;
+              Vector2f uv_cur = cam.map(project2d(xyz_cur)).cast<float>();
+              if (cam.isInFrame(uv_cur.cast<int>(),2))
+              {
+                float intensity_prev
+                    = (1./255.)*frame_data_.prev_left()
+                    .pyr_uint8[level].at<uint8_t>(v*EVERY_NTH_PIXEL,
+                                                  u*EVERY_NTH_PIXEL);
+                float intensity_cur
+                    = interpolateMat_32f(frame_data_.pyr_float32[level], uv_cur);
+                float dx
+                    = 0.5*interpolateMat_32f(frame_data_.pyr_float32_dx[level],
+                                             uv_cur);
+                float dy
+                    = 0.5*interpolateMat_32f(frame_data_.pyr_float32_dy[level],
+                                             uv_cur);
+                float res = intensity_prev-intensity_cur;
+                if (res > 0.1)
+                {
+                  res = 0.1;
+                }
+                if (res < -0.1)
+                {
+                  res = -0.1;
+                }
+                Matrix<double,2,6> frame_jac;
+                frame_jac_xyz2uv(xyz_cur, cam.focal_length(), frame_jac);
+                Vector6d J = dx*frame_jac.row(0) + dy*frame_jac.row(1);
+                H += J*J.transpose();
+                Jres += J*res;
+                float v = max(0.f, 1-50.f*res*res);
+                cv_float4 =  cv::Vec4f(v, v, v, 1.f);
+              }
+              else
+              {
+                cv_float4 =  cv::Vec4f(1.f, 0.f, 0.f, 1.f);
+              }
             }
             else
             {
-              cv_float4 =  cv::Vec4f(1.f, 0.f, 0.f, 1.f);
+              cv_float4 =  cv::Vec4f(0.f, 1.f, 0.f, 1.f);
+            }
+            residual_img[level].at<cv::Vec4f>(v,u) = cv_float4;
+          }
+        }
+        Vector6d x = H.ldlt().solve(-Jres);
+        T_cur_from_actkey_new =  SE3::exp(x)*(*T_cur_from_actkey);
+
+        float new_chi2 = 0;
+        for (int v=0; v<ref_dense_points_[level].size().height; ++v)
+        {
+          for (int u=0; u<ref_dense_points_[level].size().width; ++u)
+          {
+            cv::Vec4f cv_float4 = ref_dense_points_[level].at<cv::Vec4f>(v,u);
+            if (cv_float4[3]>0)
+            {
+              Vector3d xyz_prev(cv_float4[0], cv_float4[1], cv_float4[2]);
+              Vector3d xyz_cur = (T_cur_from_actkey_new)*xyz_prev;
+              Vector2f uv_cur = cam.map(project2d(xyz_cur)).cast<float>();
+              if (cam.isInFrame(uv_cur.cast<int>(),2))
+              {
+                float intensity_prev
+                    = (1./255.)*frame_data_.prev_left()
+                    .pyr_uint8[level].at<uint8_t>(v*EVERY_NTH_PIXEL,
+                                                  u*EVERY_NTH_PIXEL);
+                float intensity_cur
+                    = interpolateMat_32f(frame_data_.pyr_float32[level], uv_cur);
+                float res = intensity_prev-intensity_cur;
+                if (res > 0.1)
+                {
+                  res = 0.1;
+                }
+                if (res < -0.1)
+                {
+                  res = -0.1;
+                }
+                new_chi2 += res*res;
+              }
             }
           }
-          else
-          {
-            cv_float4 =  cv::Vec4f(0.f, 1.f, 0.f, 1.f);
-          }
-          residual_img[level].at<cv::Vec4f>(v,u) = cv_float4;
         }
-      }
-      Vector6d x = H.ldlt().solve(-Jres);
-      *T_cur_from_actkey =  SE3::exp(x)*(*T_cur_from_actkey);
+        rho = chi2-new_chi2;
+        if(rho>0)
+        {
+          *T_cur_from_actkey = T_cur_from_actkey_new;
+          chi2 = new_chi2;
+          stop = norm_max(x)<=EPS;
+          mu *= std::max(1./3.,1-Po3(2*rho-1));
+          nu = 2.;
+          trial = 0;
+        }
+        else
+        {
+          mu *= nu;
+          nu *= 2.;
+          ++trial;
+          if (trial==2)
+            stop = true;
+        }
+      }while(!(rho>0 ||  stop));
+      if (stop)
+        break;
     }
   }
 }
@@ -282,11 +392,11 @@ void DenseTracker
         = frame_data_.cam_vec[level];
     Matrix4d TQ = T_cur_from_actkey_.inverse().matrix()*cam.Q();
 
-    for (int v=0; v<cam.height(); ++v)
-      for (int u=0; u<cam.width(); ++u)
+    for (int v=0; v<ref_dense_points_[level].size().height; ++v)
+      for (int u=0; u<ref_dense_points_[level].size().width; ++u)
       {
         float d
-            = interpolateDisparity(frame_data_.disp, Vector2i(u,v), level);
+            = interpolateDisparity(frame_data_.disp, Vector2i(u*4,v*4), level);
 
         cv::Vec4f cv_float4;
         if (d<=0)
@@ -295,7 +405,7 @@ void DenseTracker
         }
         else
         {
-          Vector4d uvd(u, v, d, 1.f);
+          Vector4d uvd(u*EVERY_NTH_PIXEL, v*EVERY_NTH_PIXEL, d, 1.f);
           Vector3d xyz = project3d(TQ*uvd);
           cv_float4 = cv::Vec4f(xyz.x(), xyz.y(), xyz.z(), 1.);
         }

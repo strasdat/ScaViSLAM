@@ -74,6 +74,7 @@ public:
 #endif
 
 private:
+  static const int EVERY_NTH_PIXEL = 4;
   const FrameData<StereoCamera> & frame_data_;
 
 #ifdef SCAVISLAM_CUDA_SUPPORT

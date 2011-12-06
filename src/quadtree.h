@@ -432,10 +432,10 @@ public:
         }
         else
         {
-          node_queue.push(n->children_->xy.get());
-          node_queue.push(n->children_->xY.get());
-          node_queue.push(n->children_->Xy.get());
-          node_queue.push(n->children_->XY.get());
+          node_queue.push(n->children_->xy);
+          node_queue.push(n->children_->xY);
+          node_queue.push(n->children_->Xy);
+          node_queue.push(n->children_->XY);
         }
       }
       _reached_end = true;
