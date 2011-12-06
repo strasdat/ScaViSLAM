@@ -109,10 +109,18 @@ version conflicts (e.g. different OpenCV version which might be installed
 system-wide). Please follow the guide step by step and only deviate form 
 it if you really know what you are doing ;-)
 
-Check out and install g2o (revision 22):
+Download Eigen (version 3.0.3) in folder EXTERNAL
 
 >>
-svn co -r 22 https://svn.openslam.org/data/svn/g2o/trunk g2o
+wget http://bitbucket.org/eigen/eigen/get/3.0.3.tar.bz2
+tar xvf 3.0.3.tar.bz2
+mv eigen-eigen-3.0.3/ eigen3
+<<
+
+Check out and install g2o (fork of the g2o release hosted at openslam.org):
+
+>>
+git clone git@github.com:strasdat/g2o-fork.git g2o
 cd g2o
 mkdir svs_build
 cd svs_build
@@ -147,14 +155,6 @@ deactivate "USE_FFMPEF", e.g. using cmake-gui.
 
 >>
 cd ../..
-<<
-
-Download Eigen (version 3.0.3) in folder EXTERNAL
-
->>
-wget http://bitbucket.org/eigen/eigen/get/3.0.3.tar.bz2
-tar xvf 3.0.3.tar.bz2
-mv eigen-eigen-3.0.3/ eigen3
 <<
 
 Clone and install Pangolin (68d75c2d54450d90efd2e6e2cfcd72a6a599ef58)

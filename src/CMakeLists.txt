@@ -65,7 +65,7 @@ SET (INCLUDE_DIRS "../EXTERNAL/eigen3/"
 
 SET (LINK_DIRS )
 SET (LIB_NAMES GL pangolin glut g2o_stuff g2o_core g2o_solver_csparse
-               VisionTools Sophus
+               VisionTools Sophus 
                boost_system boost_thread boost_filesystem boost_regex
                opencv_core opencv_features2d opencv_flann opencv_gpu
                opencv_highgui opencv_imgproc opencv_calib3d)
