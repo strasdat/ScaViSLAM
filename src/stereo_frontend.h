@@ -66,8 +66,6 @@ struct StereoFrontendDrawData
       newtracked_points3d.at(l).clear();
       tracked_anchorpoints2d.at(l).clear();
     }
-    dense_points3d.clear();
-    dense_points3d_grayval.clear();
     blobs2d.clear();
   }
 
@@ -81,8 +79,6 @@ struct StereoFrontendDrawData
   ALIGNED<DrawItems::Point2dVec>::vector new_points2d;
   ALIGNED<DrawItems::Point3dVec>::vector new_points3d;
   DrawItems::CircleList blobs2d;
-  DrawItems::Point3dVec dense_points3d;
-  DrawItems::ColorVec dense_points3d_grayval;
 };
 
 
@@ -126,6 +122,8 @@ public:
 
   stack<AddToOptimzerPtr> to_optimizer_stack;
   tr1::unordered_map<int,Frame>  keyframe_map;
+  vector<int>  keyframe_num2id;
+  IntTable keyframe_id2num;
   int actkey_id;
 
 private:

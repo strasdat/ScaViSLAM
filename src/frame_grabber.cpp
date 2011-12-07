@@ -245,7 +245,6 @@ template <class Camera>
 void FrameGrabber<Camera>::
 rectifyFrame()
 {
-  cerr << "HAH" << endl;
   cv::Mat tmp = frame_data.cur_left().uint8.clone();
   cv::remap(tmp, frame_data.cur_left().uint8,
             rect_map_left_[0], rect_map_left_[1], CV_INTER_LINEAR);

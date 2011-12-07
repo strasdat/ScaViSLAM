@@ -605,12 +605,14 @@ void Backend
     int image_width = cam_vec_.at(0).width();
     int image_height = cam_vec_.at(0).height();
 
-    if (abs(diff[0])<REPROJ_THR
-        && abs(diff[1])<REPROJ_THR
+    StereoGraph::MyActivePointPtr point_ptr
+        = GET_VEC_VAL(id_obs.point_id, track_data.ba2globalptr);
+    int factor = zeroFromPyr_i(1, point_ptr->anchor_level);
+
+    if (abs(diff[0])<REPROJ_THR*factor
+        && abs(diff[1])<REPROJ_THR*factor
         && abs(diff[2])<REPROJ_THR*3)
     {
-      StereoGraph::MyActivePointPtr point_ptr
-          = GET_VEC_VAL(id_obs.point_id, track_data.ba2globalptr);
       int global_point_id = point_ptr->point_id;
 
       for (ALIGNED<SE3>::int_hash_map::const_iterator it_poses
@@ -664,7 +666,7 @@ void Backend
     }
   }
 
-
+  new_edges_.clear();
   for (ImageStatsTable::const_iterator it = frameid_to_pointlist->begin();
        it!=frameid_to_pointlist->end(); ++it)
   {
@@ -888,12 +890,14 @@ bool Backend
     const Vector3d & uvu = id_obs.obs;
     Vector3d diff = uvu - uvu_pred;
 
-    if (abs(diff[0])<REPROJ_THR
-        && abs(diff[1])<REPROJ_THR
+    StereoGraph::MyActivePointPtr point_ptr
+        = GET_VEC_VAL(id_obs.point_id, track_data.ba2globalptr);
+    int factor = zeroFromPyr_i(1, point_ptr->anchor_level);
+
+    if (abs(diff[0])<REPROJ_THR*factor
+        && abs(diff[1])<REPROJ_THR*factor
         && abs(diff[2])<REPROJ_THR*3)
     {
-      StereoGraph::MyActivePointPtr point_ptr
-          = GET_VEC_VAL(id_obs.point_id, track_data.ba2globalptr);
       int global_point_id = point_ptr->point_id;
 
       double u = uvu[0];

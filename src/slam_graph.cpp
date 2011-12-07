@@ -1043,7 +1043,10 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
             = GET_MAP_ELEM(point_id, v.feature_table);
         Matrix<double,ObsDim,ObsDim> Lambda;
         Lambda.setIdentity();
-        Lambda *= 1./pow(2.,feat.level);
+        double pyr_level_factor = Po2(pyrFromZero_d(1.,feat.level));
+        Lambda(0,0) *= pyr_level_factor;
+        Lambda(1,1) *= pyr_level_factor;
+        Lambda(2,2) *= Po2(0.333);
 
         const Point & p = GET_MAP_ELEM(point_id, point_table_);
 

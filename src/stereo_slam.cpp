@@ -215,7 +215,7 @@ startModules(const StereoCamera & stereo_camera,
 }
 
 //TODO: method way too long...
-void draw(pangolin::Var<int> & ui_show_keyframe,
+void draw(int loop_id,
           Views * views,
           Modules * modules)
 {
@@ -235,8 +235,6 @@ void draw(pangolin::Var<int> & ui_show_keyframe,
       ui_show_tracked_points("ui.show_tracked_points",true);
   static pangolin::Var<bool>
       ui_show_newtracked_points("ui.show_newtracked_points",true);
-  static pangolin::Var<float>
-      ui_show_dense_points("ui.show_dense_points",0,0,5);
   static pangolin::Var<bool>
       ui_show_optimized_points("ui.show_optimized_points",true);
   static pangolin::Var<bool>
@@ -248,6 +246,21 @@ void draw(pangolin::Var<int> & ui_show_keyframe,
       ("ui.debug",1,0,6);
   static  pangolin::Var<int> ui_debug_level
       ("ui.debug_level",0,0,NUM_PYR_LEVELS-1);
+
+  static pangolin::Var<int>
+      ui_show_keyframe("ui.show_keyframe",0,0,
+                       modules->frontend->keyframe_num2id.size()-1);
+  ui_show_keyframe.var->meta_range[0] = 0;
+  ui_show_keyframe.var->meta_range[1]
+      = modules->frontend->keyframe_num2id.size()-1;
+
+  if (loop_id>-1)
+  {
+    ui_show_keyframe
+        = GET_MAP_ELEM(loop_id, modules->frontend->keyframe_id2num);
+  }
+
+
 
   cv::Mat debug;
 #ifdef SCAVISLAM_CUDA_SUPPORT
@@ -393,22 +406,25 @@ void draw(pangolin::Var<int> & ui_show_keyframe,
     Draw2d::activate(modules->frame_grabber
                      ->frame_data.cam_vec.at(l).image_size());
     int show_id = ui_show_keyframe;
+
+    int keyframe_id = modules->frontend->keyframe_num2id.at(show_id);
     tr1::unordered_map<int,Frame>::const_iterator it
-        = modules->frontend->keyframe_map.find(show_id);
+        = modules->frontend->keyframe_map.find(keyframe_id);
     if(it != modules->frontend->keyframe_map.end())
     {
       if (it->second.pyr.size()>(size_t)l)
       {
-        glColor3f(1,1,1);
-        if (ui_show_keyframe==-1)
-          glColor3f(1,0.5,0.5);
+        if (loop_id>-1)
+          glColor3f(0.3,0.3,1);
+        else
+          glColor3f(1,1,1);
         Draw2d::texture(it->second.pyr[l]);
         if (ui_show_tracked_points)
         {
           const ALIGNED<DrawItems::Point2dVec>::int_hash_map & keymap
               = modules->frontend->draw_data().tracked_anchorpoints2d.at(l);
           ALIGNED<DrawItems::Point2dVec>::int_hash_map::const_iterator it2
-              = keymap.find(show_id);
+              = keymap.find(keyframe_id);
           if (it2!=keymap.end())
           {
             const DrawItems::Point2dVec & pointvec = it2->second;
@@ -523,7 +539,7 @@ void draw(pangolin::Var<int> & ui_show_keyframe,
       if (wtype_1==StereoGraph::INNER)
         glColor3f(1,0,0);
       else
-        glColor3f(1.0,0.5,0.5);
+        glColor3f(0.5,0.5,0.5);
 
       const StereoGraph::Vertex & v
           = GET_MAP_ELEM(pose_id_1, graph_draw_data->vertex_table);
@@ -566,13 +582,6 @@ void draw(pangolin::Var<int> & ui_show_keyframe,
     }
     Draw3d::pose(
           T_actkey_from_world.inverse());
-  }
-  if (ui_show_dense_points>0)
-  {
-    Draw3d::coloredPoints(modules->frontend->draw_data().dense_points3d,
-                          modules->frontend->draw_data().dense_points3d_grayval,
-                          T_actkey_from_world.inverse(),
-                          ui_show_dense_points);
   }
   if (ui_show_optimized_points)
   {
@@ -648,13 +657,6 @@ int main(int argc, const char* argv[])
 
   while(true)
   {
-    static pangolin::Var<int>
-        ui_show_keyframe("ui.show_keyframe",0,-1,
-                         modules.frontend->keyframe_map.size()-1);
-    ui_show_keyframe.var->meta_range[0] = -1;
-    ui_show_keyframe.var->meta_range[1]
-        = modules.frontend->keyframe_map.size()-1;
-
     if (!stop && (modules.frame_grabber->params().livestream
                   || show_next_frame) )
     {
@@ -691,24 +693,19 @@ int main(int argc, const char* argv[])
         modules.frontend->to_optimizer_stack.pop();
       }
     }
-    static int best_match = -1;
+    int best_match = -1;
     DetectedLoop loop;
     bool is_loop_detected = modules.backend->monitor.getClosedLoop(&loop);
     if (is_loop_detected)
     {
       best_match = loop.loop_keyframe_id;
     }
-    if (best_match>-1)
-    {
-      ui_show_keyframe = best_match;
-    }
     if (pangolin::ShouldQuit())
       exit(0);
     if(pangolin::HasResized())
       pangolin::DisplayBase().ActivateScissorAndClear();
 
-    draw(ui_show_keyframe,
-         &views, &modules);
+    draw(best_match, &views, &modules);
 
 
     show_next_frame = false;

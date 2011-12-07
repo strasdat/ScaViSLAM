@@ -147,6 +147,9 @@ void StereoFrontend
 
   //make sure keyframe is added before pushing to optimiser_stack!!
   keyframe_map.insert(make_pair(actkey_id,kf));
+  keyframe_id2num.insert(make_pair(actkey_id, keyframe_id2num.size()));
+  keyframe_num2id.push_back(actkey_id);
+
 
   to_optimizer_stack.push(to_optimizer);
 
@@ -323,6 +326,8 @@ void StereoFrontend
 
   //make sure keyframe is added before pushinh to optimiser_stack!!
   keyframe_map.insert(make_pair(actkey_id,kf));
+  keyframe_id2num.insert(make_pair(actkey_id, keyframe_id2num.size()));
+  keyframe_num2id.push_back(actkey_id);
   to_optimizer_stack.push(to_optimizer);
 
   T_cur_from_actkey_ = SE3();
@@ -664,8 +669,12 @@ AddToOptimzerPtr StereoFrontend
     const Vector3d & uvu_pred = se3xyz_stereo_.map(T_cur_from_actkey_,point);
     const Vector3d & uvu = id_obs.obs;
     Vector3d diff = uvu - uvu_pred;
+    const CandidatePoint3Ptr & ap
+        = track_data.ba2globalptr.at(id_obs.point_id);
+    int factor = zeroFromPyr_i(1, ap->anchor_level);
 
-    if (abs(diff[0])<max_reproj_error && abs(diff[1])<max_reproj_error
+    if (abs(diff[0])<max_reproj_error*factor
+        && abs(diff[1])<max_reproj_error*factor
         && abs(diff[2])<3.*max_reproj_error)
     {
 
@@ -689,8 +698,7 @@ AddToOptimzerPtr StereoFrontend
         j = 1;
       ++(stats->num_points_grid3x3(i,j));
 
-      const CandidatePoint3Ptr & ap
-          = track_data.ba2globalptr.at(id_obs.point_id);
+
       ++(stats->num_matched_points)[ap->anchor_level];
       Vector2d curkey_uv_pyr
           = pyrFromZero_2d(se3xyz.map(SE3(),point),
