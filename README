@@ -1,3 +1,15 @@
+*** ScaViSLAM ***
+
+This is a general and scalable framework for visual SLAM. It employs 
+"Double Window Optimization" (DWO) as described in our ICCV paper:
+
+H. Strasdat, A.J. Davison, J.M.M. Montiel, and K. Konolige
+"Double Window Optimisation for Constant Time Visual SLAM"
+Proceedings of the IEEE International Conference on Computer Vision, 2011.
+
+At the moment it supports calibrated stereo rigs, and RGB-D cameras.
+Monocular SLAM is NOT supported (yet).
+
 *** NOTES AND WARNINGS / READ FIRST ***
 
 This library is a research-level software which is in development. 
@@ -77,7 +89,7 @@ There are three options:
 Next, install dependencies:
 
 >>
-sudo apt-get install freeglut3-dev libglu-dev libglew-dev
+sudo apt-get install freeglut3-dev libglu-dev libglew-dev libboost-all-dev
 <<
 
 (This is an incomplete list at the moment, since it is hard to guess which 
