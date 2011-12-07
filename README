@@ -27,12 +27,10 @@ of adaptations...). It was tested on Ubuntu 11.10 - 64 bit.
 
 WARNING: There is a bug concerning Eigen3 and gcc/g++-4.4. Do not compile
 ScaViSLAM, g2o, etc. using gcc/g++-4.4! It will compile but might produce wrong
-results! (Detailed instructions are listed below.)
-see: 
-  http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2011/04/msg00013.html
-&
- http://comments.gmane.org/gmane.comp.lib.eigen/2046
- 
+results! 
+(see: http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2011/04/msg00013.html
+&  http://comments.gmane.org/gmane.comp.lib.eigen/2046)
+Detailed instructions are listed below.
 
 
 ***INSTALLATION***
