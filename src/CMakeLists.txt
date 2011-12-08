@@ -145,5 +145,6 @@ ELSE()
   ADD_EXECUTABLE(stereo_slam stereo_slam.cpp)
   ADD_LIBRARY(${PROJECT_NAME} SHARED ${SOURCES})
 ENDIF()
+ADD_EXECUTABLE(create_dictionary create_dictionary.cpp)
 
 INCLUDE_DIRECTORIES(${INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})

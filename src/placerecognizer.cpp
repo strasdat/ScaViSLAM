@@ -25,6 +25,9 @@
 #include "ransac_models.h"
 #include "ransac.hpp"
 
+// Thanks a lot to Adrien Angeli for all help and discussion concerning
+// place recognition using "bag of words".
+
 namespace ScaViSLAM
 {
 

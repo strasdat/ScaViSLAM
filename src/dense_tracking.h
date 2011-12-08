@@ -75,6 +75,8 @@ public:
 
 private:
   static const int EVERY_NTH_PIXEL = 4;
+  //todo: different factor for different pyramid levels!
+
   const FrameData<StereoCamera> & frame_data_;
 
 #ifdef SCAVISLAM_CUDA_SUPPORT

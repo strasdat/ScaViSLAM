@@ -39,10 +39,18 @@ DenseTracker
     dev_residual_img[level].create(mat_size, CV_32FC4);
     dev_residual_img[level].setTo(cv::Scalar(0,0,0,1));
 #else
-    ref_dense_points_[level].create(mat_size.height/EVERY_NTH_PIXEL,
-                                    mat_size.width/EVERY_NTH_PIXEL, CV_32FC4);
-    residual_img[level].create(mat_size.height/EVERY_NTH_PIXEL,
-                               mat_size.width/EVERY_NTH_PIXEL, CV_32FC4);
+    assert(mat_size.width%EVERY_NTH_PIXEL==0);
+    assert(mat_size.height%EVERY_NTH_PIXEL==0);
+    // If this asserts fails, we need to verify whether the logic below still
+    // works, or we need to adapt the code!
+
+    int width_times_factor = mat_size.width/EVERY_NTH_PIXEL;
+    int height_times_factor = mat_size.height/EVERY_NTH_PIXEL;
+
+    ref_dense_points_[level].create(height_times_factor,
+                                    width_times_factor, CV_32FC4);
+    residual_img[level].create(height_times_factor,
+                               width_times_factor, CV_32FC4);
     residual_img[level].setTo(cv::Scalar(0,0,0,1));
 #endif
   }
