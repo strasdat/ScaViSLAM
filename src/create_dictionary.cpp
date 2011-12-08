@@ -224,7 +224,9 @@ createDictionary(const string & base_str,
                             descriptors);
 }
 
-int main(int argc, const char* argv[])
+
+int
+main(int argc, const char* argv[])
 {
   if (argc<2)
   {
