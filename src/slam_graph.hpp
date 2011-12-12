@@ -554,11 +554,10 @@ public:
     unmargPosesEnteringInnerW();
 
     void
-    computeConstraint         (const Vertex & v1,
-                               const Vertex & v2,
-                               Pose * T_2_from_1,
-                               Matrix<double,Pose::DoF,Pose::DoF> * Lambda);
-
+    computeConstraint        (const Vertex & v1,
+                              const Vertex & v2,
+                              Pose * T_2_from_1,
+                              Matrix<double,Pose::DoF,Pose::DoF> * Lambda);
     void
     setupG2o                 (g2o::SparseOptimizer * optimizer);
 

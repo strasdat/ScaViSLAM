@@ -102,10 +102,8 @@ void StereoFrontend
   actkey_id = getNewUniqueId();
   neighborhood_->T_me_from_w_map.insert(make_pair(actkey_id,T_cur_from_actkey_));
 
-  static pangolin::Var<bool> disp_img
-      ("framepipe.disp_img",false);
 
-  if (disp_img)
+  if (frame_data_->have_disp_img)
   {
     vector<cv::Mat> hsv_array(3);
     hsv_array[0] = cv::Mat(frame_data_->disp.size(), CV_8UC1);
@@ -181,10 +179,8 @@ bool StereoFrontend
   per_mon_->stop("dense tracking");
 
   per_mon_->start("stereo");
-  static pangolin::Var<bool> disp_img
-      ("framepipe.disp_img",false);
 
-  if (disp_img)
+  if (frame_data_->have_disp_img)
   {
     vector<cv::Mat> hsv_array(3);
     hsv_array[0] = cv::Mat(frame_data_->disp.size(), CV_8UC1);

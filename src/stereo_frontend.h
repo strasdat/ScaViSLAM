@@ -177,6 +177,7 @@ private:
 
   bool
   shallWeDropNewKeyframe     (const PointStatistics & point_stats);
+
   void
   addNewKeyframe             (const ALIGNED<QuadTree<int> >::vector &
                               feature_tree,

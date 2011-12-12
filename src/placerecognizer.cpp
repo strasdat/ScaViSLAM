@@ -82,15 +82,16 @@ PlaceRecognizer
 ::PlaceRecognizer(const StereoCamera & stereo_cam)
   : stereo_cam_(stereo_cam)
 {
-  cv::Mat words_floats_as_4uchars
+  cv::Mat words_float_as_four_uint8
       = cv::imread(string("../data/surfwords10000.png"),-1);
-  assert(words_floats_as_4uchars.size().area()>0);
-  assert(words_floats_as_4uchars.type()==CV_8U);
+  assert(words_float_as_four_uint8.size().area()>0);
+  assert(words_float_as_four_uint8.type()==CV_8U);
   assert(sizeof(float)==4);
-  words_ = cv::Mat(words_floats_as_4uchars.rows,
-                   words_floats_as_4uchars.cols/4,
+  assert(words_float_as_four_uint8.cols%4==0);
+  words_ = cv::Mat(words_float_as_four_uint8.rows,
+                   words_float_as_four_uint8.cols/4,
                    CV_32F,
-                   words_floats_as_4uchars.data).clone();
+                   words_float_as_four_uint8.data).clone();
   flann_index_
       = tr1::shared_ptr<generic_index_type>
         (new cv::flann::GenericIndex<distance_type>(

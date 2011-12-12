@@ -209,16 +209,12 @@ Move to main project folder "ScaViSLAM" and install ScaViSLAM:
 cd ../../../
 mkdir svs_build
 cd svs_build
-<<
-
-In case you would like to compile ScaViSLAM WITHOUT CUDA support, open 
-"../src/CMakeLists.txt" using your favourite editor and change 
-"SET(CUDA_SUPPORT ON)" --> "SET(CUDA_SUPPORT OFF)".
-
->>
 cmake ../src
 make -j8
 <<
+
+In case you would like to compile ScaViSLAM WITHOUT CUDA support, type
+"cmake -DCUDA_SUPPORT=OFF ../src/" instaed of "cmake ../src"
 
 Make sure the "New College" data set is downloaded completely.
 Then add a sym-link inside "ScaViSLAM/data":
@@ -233,3 +229,136 @@ Run ScaViSLAM on new college image sequence:
 cd ../svs_build
 ./stereo_slam ../data/newcollege.cfg
 <<
+
+
+*** How to use a camera live ***
+
+At the moment, only RGB-D cameras following the PrimeSense reference design
+(e.g. Ausus Xtion PRO LIVE) are supported.
+First, you need to install PCL (which includes OpenNI):
+
+>>
+sudo add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl
+sudo apt-get update
+sudo apt-get install libpcl-all
+<<
+
+Reinstall ScaViSLAM with PCL support:
+
+>>
+cd MY_SOFTWARE_DIRECTORY
+cd /ScaViSLAM/
+mkdir svs_build_with_pcl
+cd svs_build_with_pcl
+cmake  -DCUDA_SUPPORT=ON ..
+make -j8
+>>
+
+Try out ScaViSLAM with your RGB-D camera life:
+
+>>
+./stereo_slam ../data/rgbd-Live.cfg
+<<
+
+To dump RGBD data to the hard disk (to ../data/out; create this directory or 
+set approriate sym-link.).:
+
+>>
+./dump_rgbd ../data/rgbd_live.cfg 
+<<
+
+Finally, you can process the saved image sequence by adapting the configuration 
+files "../data/rgbd_example.cfg". Basically, you have to point
+"framepipe.path_str" to the saved images.
+
+
+*** What about standard stereo cameras ? ***
+
+This is more tricky since we need to make sure that the image stream is 
+rectified. Some adaptation in the code might be necessary.
+
+
+*** How to contribute? ***
+
+You are welcome to report bugs and request features at: 
+https://github.com/strasdat/ScaViSLAM/issues.
+To do so click on "New Issue", fill out the form and select the approriate
+label ("Bug" or "Feature Request").
+Please feel free to also browse through the "ToDo" and "Future Features" 
+issues, so you can find out which features are planned to be included 
+soon ("ToDo") or eventually ("Future Features").
+
+The best and easiest  way to contribute is to use the "github" way:
+ - Register at github (for free).
+ - Got to: "https://github.com/strasdat/ScaViSLAM"
+ - Click on "Fork" to create a Fork of ScaViSLAM.
+ - Commit and push changes into your Fork.
+ - Click on "Pull Request" in order to ask me whether I would like to merge
+   the changes into the ScaViSLAM master branch.
+
+(If it is only a small change/bug fix, you could also simply send me
+patch etc.)
+
+In order to maximize the likelyhood that I will accept your pull request,
+please read carefully thourgh the coding style guide:
+
+
+*** Coding Style Guide ***
+
+The coding style is largely influenced by the google c++ coding style guide:
+http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml
+(Reading the document is insightful in any case, even if you don't agree with
+"google's" decision!)
+
+I am especially strick about the following rules:
+
+ - "When defining a function, parameter order is: inputs, then outputs."
+ - "All parameters passed by reference must be labeled const."
+   Thus, the following is NOT okay:
+   'void method(const Vector2d & in, Vector2d & out)'
+   Use this instead:
+   'void method(const Vector2d & in, Vector2d * out)'
+ - "Of the built-in C++ integer types, the only one used is int. If a program 
+    needs a variable of a different size, use a precise-width integer type 
+    from <stdint.h>, such as int16_t."
+ - "Use 0 for integers, 0.0 for reals, NULL for pointers, and '\0' for chars."
+ - "We do not use C++ exceptions."
+ - "Use the specified order of declarations within a class: public: before 
+    private:, methods before data members (variables), etc." 
+ - "Use a struct only for passive objects that carry data; everything else 
+    is a class."
+ - "Prefer small and focused functions."
+ - "Use only approved libraries and language extensions from C++11 (formerly 
+    known as C++0x). Currently, none are approved."
+ - "We do not allow default function parameters, except in a few uncommon 
+    situations..."
+ - "Use prefix form (++i) of the increment and decrement operators with 
+    iterators and other template objects."
+ - "We strongly recommend that you use const whenever it makes sense to do so."
+
+At some points, I deviate from the C++ coding style guide:
+ - 'Using namespace X;' is okay, but only within(!) the ScaViSLAM namespace.
+   Never pollute the general namespace '::'. 
+   (However, do not use "using namespace cv" or 'using namespace pangolin'.) 
+ - I use 'boost::thread'.
+ - In rare cases, it is okay to habe public class members.
+ - It is okay to use streams such as "cout", "cerr", "stringstream". (But 
+   usually, I'd like to use "cerr" and friends only for debugging purposes...)
+
+I also deviate slightly from google's formating. Therefore the following rule
+is the most important one:
+
+"Use common sense and BE CONSISTENT.
+
+If you are editing code, take a few minutes to look at the code around you and 
+determine its style. If they use spaces around their if clauses, you should, 
+too. If their comments have little boxes of stars around them, make your 
+comments have little boxes of stars around them too." 
+
+(All cites in "quatation marks" are from the google coding style guide.)
+
+If you would like to use automatic identation, I recommend you to use
+the standard setting in QtCreator 1.3.1 (or newer), however with 
+"Tools/Options/Text Editor/Behavior/Indent size = 2" and a maximal number of 
+80 characters per line (i.e. mark 
+"Tools/Options/Text Editor/Display/Display right margin at column = 80").

@@ -133,6 +133,24 @@ intializeRectifier()
                               rect_map_right_[0], rect_map_right_[1]);
 }
 
+template <>
+void FrameGrabber<StereoCamera>::
+depthToDisp(const cv::Mat & depth_img,
+            cv::Mat * disp_img) const
+{
+  assert(depth_img.type()==CV_16U);
+  *disp_img = cv::Mat(depth_img.size(), CV_32F);
+  static const float FACTOR = 1./5000.;
+  for (int v=0; v<depth_img.size().height; ++v)
+    for (int u=0; u<depth_img.size().width; ++u)
+    {
+      float depth
+          = depth_img.at<uint16_t>(v,u)*FACTOR;
+      disp_img->at<float>(v,u) = frame_data.cam.depthToDisp(depth);
+    }
+
+}
+
 template class FrameGrabber<StereoCamera>;
 template class FrameGrabber<LinearCamera>;
 }

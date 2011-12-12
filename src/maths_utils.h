@@ -50,12 +50,16 @@ interpolateMat_8u            (const cv::Mat & mat,
                               const Vector2f & uv);
 Vector2d
 project2d                    (const Vector3d&);
+
 Vector3d
 project3d                    (const Vector4d&);
+
 Vector3d
 unproject2d                  (const Vector2d&);
+
 Vector4d
 unproject3d                  (const Vector3d&);
+
 double
 norm_max                     (const Eigen::VectorXd & v);
 

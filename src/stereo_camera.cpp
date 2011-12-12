@@ -51,4 +51,11 @@ Vector3d StereoCamera
   return unproject2d(LinearCamera::unmap(uvu.head(2)))*z;
 }
 
+float StereoCamera
+::depthToDisp(float depth) const
+{
+  float scaled_disparity = focal_length_/depth;
+  return scaled_disparity/baseline_;
+}
+
 }

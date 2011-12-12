@@ -164,13 +164,13 @@ calculateWordsAndSaveThem(int TARGET_NUM_WORDS,
                                                     distance());
   cout << "Done: dictionary of " << num_centers << " words created!" << endl;
   assert(sizeof(float)==4);
-  cv::Mat centers_floats_as_4uchars(num_centers,
-                                    descriptors.cols*4,
-                                    CV_8U,
-                                    centers.data);
+  cv::Mat centers_float_as_four_uint8(num_centers,
+                                      descriptors.cols*4,
+                                      CV_8U,
+                                      centers.data);
   stringstream str_stream;
   str_stream<< "surfwords" << num_centers << ".png";
-  cv::imwrite(str_stream.str(), centers_floats_as_4uchars);
+  cv::imwrite(str_stream.str(), centers_float_as_four_uint8);
 
   cout << "Saved as file: " << str_stream.str() << endl;
 }

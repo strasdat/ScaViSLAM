@@ -69,10 +69,15 @@ public:
 
   Matrix4d
   Q                          () const;
+
   Vector3d
   map_uvu                    (const Vector3d & xyz) const;
+
   Vector3d
   unmap_uvu                  (const Vector3d& uvu) const;
+
+  float
+  depthToDisp                (float depth) const;
 
   const double& baseline() const
   {

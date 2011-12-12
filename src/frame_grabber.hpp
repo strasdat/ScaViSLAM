@@ -98,6 +98,7 @@ public:
       gpu_pyr_float32_dx(NUM_PYR_LEVELS),
       gpu_pyr_float32_dy(NUM_PYR_LEVELS),
     #endif
+      have_disp_img(false),
       offset(0)
   {}
 
@@ -146,6 +147,7 @@ public:
   vector<cv::Mat> pyr_float32_dy;
 #endif
   int frame_id;
+  bool have_disp_img;
 private:
   int offset;
 };
@@ -169,6 +171,7 @@ public:
     bool color_img;
     bool right_img;
     bool disp_img;
+    bool depth_img;
     bool rectify_frame;
   };
 
@@ -209,6 +212,10 @@ private:
 
   void
   preprocessing              ();
+
+  void
+  depthToDisp                (const cv::Mat & depth_img,
+                              cv::Mat * disp_img) const;
 
   PerformanceMonitor * per_mon_;
   cv::Mat rect_map_left_[2];

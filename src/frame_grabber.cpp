@@ -17,6 +17,8 @@
 
 #include "frame_grabber.hpp"
 
+#include <stdint.h>
+
 #include <boost/filesystem.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/regex.hpp>
@@ -165,11 +167,6 @@ processNextFrame()
       frame_data.cur_left().uint8 = cv::imread(left_sstr.str(),0);
 
     }
-    if (params_.right_img)
-    {
-      right_sstr << basename << "right." << params_.format_str ;
-      frame_data.right.uint8 = cv::imread(right_sstr.str(),0);
-    }
     if (params_.disp_img)
     {
       disp_sstr << basename << "disp." << params_.format_str ;
@@ -181,6 +178,23 @@ processNextFrame()
                                 CV_32F, float_as_4uint.data).clone();
       cerr << frame_data.disp.size().width << " "
            << frame_data.disp.size().height << endl;
+      frame_data.have_disp_img = true;
+    }
+    else if (params_.depth_img)
+    {
+      std::stringstream depth_sstr;
+      depth_sstr << basename << "depth." << params_.format_str ;
+      cerr << depth_sstr.str() << endl;
+      //frame_data.right.uint8 = cv::imread(right_sstr.str(),0);
+      cv::Mat depth = cv::imread(depth_sstr.str(),-1);
+      cerr << depth.type() << endl;
+      depthToDisp(depth, &frame_data.disp);
+      frame_data.have_disp_img = true;
+    }
+    else if (params_.right_img)
+    {
+      right_sstr << basename << "right." << params_.format_str ;
+      frame_data.right.uint8 = cv::imread(right_sstr.str(),0);
     }
     if (params_.rectify_frame)
       rectifyFrame();
@@ -192,6 +206,14 @@ processNextFrame()
   per_mon_->stop("grab frame");
   preprocessing();
   ++frame_data.frame_id;
+}
+
+template <class Camera>
+void FrameGrabber<Camera>::
+depthToDisp(const cv::Mat & depth_img,
+            cv::Mat * disp_img) const
+{
+  assert(false);
 }
 
 template <class Camera>
@@ -235,6 +257,8 @@ loadParams()
       ("framepipe.right_img",false);
   params_.disp_img = pangolin::Var<bool>
       ("framepipe.disp_img",false);
+  params_.depth_img = pangolin::Var<bool>
+      ("framepipe.depth_img",false);
   params_.rectify_frame = pangolin::Var<bool>
       ("framepipe.rectify_frame",false);
 
@@ -275,6 +299,7 @@ frameFromLiveCamera()
   cv::cvtColor(frame_data.cur_left().color_uint8,
                frame_data.cur_left().uint8,
                CV_BGR2GRAY);
+  frame_data.have_disp_img = true;
 #else
   assert(false);
 #endif
