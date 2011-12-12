@@ -250,7 +250,7 @@ cd MY_SOFTWARE_DIRECTORY
 cd /ScaViSLAM/
 mkdir svs_build_with_pcl
 cd svs_build_with_pcl
-cmake  -DCUDA_SUPPORT=ON ..
+cmake  -DPCL_SUPPORT=ON ..
 make -j8
 >>
 
