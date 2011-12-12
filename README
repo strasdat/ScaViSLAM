@@ -1,4 +1,4 @@
-*** ScaViSLAM ***
+***** ScaViSLAM *****
 
 This is a general and scalable framework for visual SLAM. It employs 
 "Double Window Optimization" (DWO) as described in our ICCV paper:
@@ -33,7 +33,7 @@ results!
 Detailed instructions are listed below.
 
 
-***INSTALLATION***
+*** INSTALLATION ***
 
 First download sample image sequences. This will take a while, so do it first.
 (These are already rectified stereo images from the New College dataset: 
@@ -231,7 +231,7 @@ cd ../svs_build
 <<
 
 
-*** How to use a camera live ***
+*** HOW TO USE A RGB-D CAMERA? ***
 
 At the moment, only RGB-D cameras following the PrimeSense reference design
 (e.g. Ausus Xtion PRO LIVE) are supported.
@@ -260,8 +260,8 @@ Try out ScaViSLAM with your RGB-D camera life:
 ./stereo_slam ../data/rgbd-Live.cfg
 <<
 
-To dump RGBD data to the hard disk (to ../data/out; create this directory or 
-set approriate sym-link.).:
+Dump RGB-D data to the hard disk (to ../data/out; create this directory or 
+set an approriate sym-link):
 
 >>
 ./dump_rgbd ../data/rgbd_live.cfg 
@@ -272,13 +272,13 @@ files "../data/rgbd_example.cfg". Basically, you have to point
 "framepipe.path_str" to the saved images.
 
 
-*** What about standard stereo cameras ? ***
+*** WHAT ABOUT STANDARD STEREO CAMERAS? ***
 
 This is more tricky since we need to make sure that the image stream is 
-rectified. Some adaptation in the code might be necessary.
+rectified. Some adaptation in the code might be necessary...
 
 
-*** How to contribute? ***
+*** HOW TO CONTRIBUTE? ***
 
 You are welcome to report bugs and request features at: 
 https://github.com/strasdat/ScaViSLAM/issues.
@@ -303,7 +303,7 @@ In order to maximize the likelyhood that I will accept your pull request,
 please read carefully thourgh the coding style guide:
 
 
-*** Coding Style Guide ***
+*** CODING STYLE GUIDE ***
 
 The coding style is largely influenced by the google c++ coding style guide:
 http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml
