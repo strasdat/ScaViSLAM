@@ -214,7 +214,7 @@ make -j8
 <<
 
 In case you would like to compile ScaViSLAM WITHOUT CUDA support, type
-"cmake -DCUDA_SUPPORT=OFF ../src/" instaed of "cmake ../src"
+"cmake -DCUDA_SUPPORT=OFF .." instead of "cmake .."
 
 Make sure the "New College" data set is downloaded completely.
 Then add a sym-link inside "ScaViSLAM/data":
