@@ -23,10 +23,10 @@
 #include <g2o/solvers/csparse/linear_solver_csparse.h>
 
 
-#include <accessor_macros.h>
+#include <visiontools/accessor_macros.h>
+#include <visiontools/stopwatch.h>
 
 #include "maths_utils.h"
-#include "stopwatch.h"
 #include "g2o_types/anchored_points.h"
 
 namespace ScaViSLAM

@@ -23,9 +23,7 @@
 #include <boost/static_assert.hpp>
 #include <boost/regex.hpp>
 
-#include <so3.h>
-
-#include "performance_monitor.h"
+#include <visiontools/performance_monitor.h>
 
 namespace ScaViSLAM
 {

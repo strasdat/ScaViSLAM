@@ -18,7 +18,7 @@
 #ifndef SCAVISLAM_STEREO_FRONTEND_H
 #define SCAVISLAM_STEREO_FRONTEND_H
 
-#include <performance_monitor.h>
+#include <visiontools/performance_monitor.h>
 
 #include "global.h"
 #include "draw_items.h"

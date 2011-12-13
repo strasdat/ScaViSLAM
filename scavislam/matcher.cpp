@@ -19,8 +19,9 @@
 
 #include <stdint.h>
 
-#include <accessor_macros.h>
-#include <se3.h>
+#include <sophus/se3.h>
+
+#include <visiontools/accessor_macros.h>
 
 #include "data_structures.h"
 #include "homography.h"

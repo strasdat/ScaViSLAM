@@ -21,9 +21,9 @@
 
 #include <opencv2/features2d/features2d.hpp>
 
-#include <accessor_macros.h>
-#include <stopwatch.h>
-#include <performance_monitor.h>
+#include <visiontools/accessor_macros.h>
+#include <visiontools/performance_monitor.h>
+#include <visiontools/stopwatch.h>
 
 #include "backend.h"
 #include "homography.h"

@@ -15,7 +15,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with ScaViSLAM.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <accessor_macros.h>
+#include <sophus/so3.h>
+
+#include <visiontools/accessor_macros.h>
 
 #include "frame_grabber.cpp"
 #include "stereo_camera.h"

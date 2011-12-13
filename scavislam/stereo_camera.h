@@ -18,7 +18,7 @@
 #ifndef SCAVISLAM_STEREO_CAMERA_H
 #define SCAVISLAM_STEREO_CAMERA_H
 
-#include <linear_camera.h>
+#include <visiontools/linear_camera.h>
 
 #include "maths_utils.h"
 

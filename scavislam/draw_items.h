@@ -21,7 +21,7 @@
 
 #include <opencv2/core/core.hpp>
 
-#include <gl_data.h>
+#include <visiontools/gl_data.h>
 
 #include "global.h"
 

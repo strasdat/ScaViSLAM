@@ -23,9 +23,9 @@
 #include <g2o/core/base_multi_edge.h>
 #include <g2o/core/base_unary_edge.h>
 
-#include <se3.h>
+#include <sophus/se3.h>
 #ifdef MONO
-#include <sim3.h>
+#include <sophus/sim3.h>
 #endif
 
 #include "../global.h"

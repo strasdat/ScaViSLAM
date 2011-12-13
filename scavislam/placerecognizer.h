@@ -21,7 +21,7 @@
 #include <boost/thread.hpp>
 #include <opencv2/flann/flann.hpp>
 
-#include <se3.h>
+#include <sophus/se3.h>
 
 #include "matcher.hpp"
 #include "keyframes.h"

@@ -20,13 +20,13 @@
 #include <cassert>
 #include <limits>
 
-#include <accessor_macros.h>
-#include <se3.h>
+#include <sophus/se3.h>
 #ifdef MONO
-#include <sim3.h>
+#include <sophus/sim3.h>
 #endif
 
-#include "abstract_camera.h"
+#include <visiontools/accessor_macros.h>
+#include <visiontools/abstract_camera.h>
 
 namespace ScaViSLAM
 {

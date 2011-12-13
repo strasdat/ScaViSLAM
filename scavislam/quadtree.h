@@ -24,7 +24,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#include <sample.h>
+#include <visiontools/sample.h>
 
 #include "global.h"
 #include "maths_utils.h"

@@ -20,7 +20,7 @@
 
 #include <list>
 
-#include <se3.h>
+#include <sophus/se3.h>
 
 #include "global.h"
 #include "keyframes.h"

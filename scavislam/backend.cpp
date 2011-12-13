@@ -19,7 +19,7 @@
 
 #include <pangolin/pangolin.h>
 
-#include <accessor_macros.h>
+#include <visiontools/accessor_macros.h>
 
 #include "fast_grid.h"
 #include "pose_optimizer.h"

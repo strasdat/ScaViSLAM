@@ -28,49 +28,45 @@ IF(PCL_SUPPORT)
 ENDIF()
 
 IF( NOT CMAKE_BUILD_TYPE )
-   SET( CMAKE_BUILD_TYPE Release )
+  SET( CMAKE_BUILD_TYPE Release )
 ENDIF()
 
 IF (CMAKE_COMPILER_IS_GNUCXX )
-   SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
-   SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -g ")
-
+  SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
+  SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -g ")
   ADD_DEFINITIONS("-Wall -Werror -Wno-unused-variable
                    -Wno-unused-but-set-variable -Wno-unknown-pragmas ")
 ENDIF()
 
 
-SET (INCLUDE_DIRS "../EXTERNAL/eigen3/"
-                  "../EXTERNAL/opencv2/include/opencv"
-                  "../EXTERNAL/opencv2/include/"
-                  "../EXTERNAL/opencv2/modules/core/include"
-                  "../EXTERNAL/opencv2/modules/imgproc/include"
-                  "../EXTERNAL/opencv2/modules/video/include"
-                  "../EXTERNAL/opencv2/modules/features2d/include"
-                  "../EXTERNAL/opencv2/modules/flann/include"
-                  "../EXTERNAL/opencv2/modules/objdetect/include"
-                  "../EXTERNAL/opencv2/modules/calib3d/include"
-                  "../EXTERNAL/opencv2/modules/ml/include"
-                  "../EXTERNAL/opencv2/modules/highgui/include"
-                  "../EXTERNAL/opencv2/modules/legacy/include"
-                  "../EXTERNAL/opencv2/modules/contrib/include"
-                  "../EXTERNAL/g2o/svs_build"
-                  "../EXTERNAL/g2o/"
-                  "../EXTERNAL/g2o/EXTERNAL/csparse/"
-                  "../EXTERNAL/Pangolin/"
-                  "../EXTERNAL/Pangolin/svs_build"
-                  "../EXTERNAL/Sophus/src"
-                  "../EXTERNAL/Sophus/svs_build"
-                  "../EXTERNAL/VisionTools/src"
-                  "../EXTERNAL/VisionTools/svs_build")
+SET (INCLUDE_DIRS "EXTERNAL/eigen3/"
+                  "EXTERNAL/opencv2/include/opencv"
+                  "EXTERNAL/opencv2/include/"
+                  "EXTERNAL/opencv2/modules/core/include"
+                  "EXTERNAL/opencv2/modules/imgproc/include"
+                  "EXTERNAL/opencv2/modules/video/include"
+                  "EXTERNAL/opencv2/modules/features2d/include"
+                  "EXTERNAL/opencv2/modules/flann/include"
+                  "EXTERNAL/opencv2/modules/objdetect/include"
+                  "EXTERNAL/opencv2/modules/calib3d/include"
+                  "EXTERNAL/opencv2/modules/ml/include"
+                  "EXTERNAL/opencv2/modules/highgui/include"
+                  "EXTERNAL/opencv2/modules/legacy/include"
+                  "EXTERNAL/opencv2/modules/contrib/include"
+                  "EXTERNAL/g2o/svs_build"
+                  "EXTERNAL/g2o/"
+                  "EXTERNAL/g2o/EXTERNAL/csparse/"
+                  "EXTERNAL/Pangolin/"
+                  "EXTERNAL/Pangolin/svs_build"
+                  "EXTERNAL/Sophus"
+                  "EXTERNAL/VisionTools")
 
- LIST(APPEND CMAKE_LIBRARY_PATH ../EXTERNAL/g2o/lib
-                                ../EXTERNAL/opencv2/svs_build/lib/
-                                ../EXTERNAL/Pangolin/svs_build/pangolin
-                                ../EXTERNAL/Sophus/svs_build/
-                                ../EXTERNAL/VisionTools/svs_build/)
+ LIST(APPEND CMAKE_LIBRARY_PATH EXTERNAL/g2o/lib
+                                EXTERNAL/opencv2/svs_build/lib/
+                                EXTERNAL/Pangolin/svs_build/pangolin
+                                EXTERNAL/Sophus/svs_build/
+                                EXTERNAL/VisionTools/svs_build/)
 
-SET (LINK_DIRS )
 SET (LIB_NAMES GL pangolin glut g2o_stuff g2o_core g2o_solver_csparse
                VisionTools Sophus 
                boost_system boost_thread boost_filesystem boost_regex
@@ -78,7 +74,7 @@ SET (LIB_NAMES GL pangolin glut g2o_stuff g2o_core g2o_solver_csparse
                opencv_highgui opencv_imgproc opencv_calib3d)
 
 IF(CUDA_SUPPORT)
-  LIST(APPEND INCLUDE_DIRS "../EXTERNAL/opencv2/modules/gpu/include")
+  LIST(APPEND INCLUDE_DIRS "EXTERNAL/opencv2/modules/gpu/include")
   FIND_PACKAGE(CUDA REQUIRED)
   SET(CUDA_NVCC_FLAGS  "-arch=sm_20" "--use_fast_math" "-O3"
                        "--ptxas-options=--verbose" "-keep"  )
@@ -114,31 +110,33 @@ SET (TEMPLATE ransac
               matcher
               slam_graph )
 
-SET (SOURCES draw_items.h
-             global.h   
-             keyframes.h
-             quadtree.h
-             transformations.h
-             data_structures.h
-             pose_optimizer.h)
+SET (SOURCE_DIR "scavislam")
+SET (SOURCES ${SOURCE_DIR}/draw_items.h
+             ${SOURCE_DIR}/global.h   
+             ${SOURCE_DIR}/keyframes.h
+             ${SOURCE_DIR}/quadtree.h
+             ${SOURCE_DIR}/transformations.h
+             ${SOURCE_DIR}/data_structures.h
+             ${SOURCE_DIR}/pose_optimizer.h)
 
 IF(PCL_SUPPORT)
   LIST(APPEND CLASSES rgbd_grabber)
 ENDIF()
 
 IF(CUDA_SUPPORT)
-  LIST(APPEND SOURCES gpu/dense_tracking.cuh
-                      gpu/dense_tracking.cu)
+  LIST(APPEND SOURCES ${SOURCE_DIR}/gpu/dense_tracking.cuh
+                      ${SOURCE_DIR}/gpu/dense_tracking.cu)
 ENDIF()
 
 
 FOREACH(class ${CLASSES})
-  LIST(APPEND SOURCES ${class}.cpp ${class}.h)
+  LIST(APPEND SOURCES ${SOURCE_DIR}/${class}.cpp ${SOURCE_DIR}/${class}.h)
 ENDFOREACH(class)
 
 FOREACH(template ${TEMPLATE})
-  LIST(APPEND SOURCES ${template}.cpp   ${template}.hpp
-                      ${template}-impl.cpp )
+  LIST(APPEND SOURCES ${SOURCE_DIR}/${template}.cpp   
+                      ${SOURCE_DIR}/${template}.hpp
+                      ${SOURCE_DIR}/${template}-impl.cpp )
 ENDFOREACH(template)
 
 LINK_DIRECTORIES(${LINK_DIRS} ${PCL_LIBRARY_DIRS})
@@ -146,15 +144,15 @@ LINK_LIBRARIES (${PROJECT_NAME} ${LIBS} ${PCL_LIBRARIES})
 
 IF(CUDA_SUPPORT)
   LIST(APPEND INCLUDE_DIRS ${CUDA_SDK_ROOT_DIR}/common/inc ${CUDA_INCLUDE_DIRS})
-  CUDA_ADD_EXECUTABLE(stereo_slam stereo_slam.cpp)
+  CUDA_ADD_EXECUTABLE(stereo_slam ${SOURCE_DIR}/stereo_slam.cpp)
   CUDA_ADD_LIBRARY(${PROJECT_NAME} SHARED ${SOURCES})
 ELSE()
-  ADD_EXECUTABLE(stereo_slam stereo_slam.cpp)
+  ADD_EXECUTABLE(stereo_slam ${SOURCE_DIR}/stereo_slam.cpp)
   ADD_LIBRARY(${PROJECT_NAME} SHARED ${SOURCES})
 ENDIF()
-ADD_EXECUTABLE(create_dictionary create_dictionary.cpp)
+ADD_EXECUTABLE(create_dictionary ${SOURCE_DIR}/create_dictionary.cpp)
 IF(PCL_SUPPORT)
-  ADD_EXECUTABLE(dump_rgbd dump_rgbd.cpp)
+  ADD_EXECUTABLE(dump_rgbd ${SOURCE_DIR}/dump_rgbd.cpp)
 ENDIF()
 
 INCLUDE_DIRECTORIES(${INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})

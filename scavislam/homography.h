@@ -18,7 +18,7 @@
 #ifndef SCAVISLAM_HOMOGRAPHY_H
 #define SCAVISLAM_HOMOGRAPHY_H
 
-#include <se3.h>
+#include <sophus/se3.h>
 
 namespace ScaViSLAM
 {

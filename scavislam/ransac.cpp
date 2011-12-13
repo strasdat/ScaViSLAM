@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with ScaViSLAM.  If not, see <http://www.gnu.org/licenses/>.
 
-#include <sample.h>
+#include <visiontools/sample.h>
 
 #include "ransac.hpp"
 
@@ -24,6 +24,7 @@ namespace ScaViSLAM
 
 // This RANSAC code is based on "http://www.ros.org/wiki/posest"
 // written by Kurt Konolige and originally licensed under BSD.
+
 template<class Model>
 int RanSaC<Model>
 ::compute(int numRansac,

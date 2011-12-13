@@ -21,8 +21,8 @@
 #include <vector>
 #include <map>
 
-#include <accessor_macros.h>
-#include <stopwatch.h>
+#include <visiontools/accessor_macros.h>
+#include <visiontools/stopwatch.h>
 
 #include "global.h"
 #include "maths_utils.h"

@@ -20,15 +20,16 @@
 #endif
 
 #include <pangolin/pangolin.h>
-#include <performance_monitor.h>
+
+#include <visiontools/accessor_macros.h>
+#include <visiontools/draw2d.h>
+#include <visiontools/draw3d.h>
+#include <visiontools/performance_monitor.h>
 
 #include "global.h"
 
-#include "accessor_macros.h"
 #include "backend.h"
 #include "stereo_camera.h"
-#include "draw2d.h"
-#include "draw3d.h"
 #include "draw_items.h"
 #include "frame_grabber.hpp"
 #include "placerecognizer.h"

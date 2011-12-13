@@ -19,8 +19,8 @@
 
 #include <tr1/memory>
 
-#include <accessor_macros.h>
-#include <stopwatch.h>
+#include <visiontools/accessor_macros.h>
+#include <visiontools/stopwatch.h>
 
 #include "ransac_models.h"
 #include "ransac.hpp"

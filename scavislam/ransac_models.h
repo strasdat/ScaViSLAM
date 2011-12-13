@@ -18,13 +18,16 @@
 #ifndef SCAVISLAM_RANSAC_MODELS_H
 #define SCAVISLAM_RANSAC_MODELS_H
 
-#include <se3.h>
+#include <sophus/se3.h>
 #ifdef MONO
-#include <sim3.h>
+#include <sophus/sim3.h>
 #endif
 
 #include "global.h"
 #include "stereo_camera.h"
+
+// This RANSAC code is based on "http://www.ros.org/wiki/posest"
+// written by Kurt Konolige and originally licensed under BSD.
 
 namespace ScaViSLAM
 {

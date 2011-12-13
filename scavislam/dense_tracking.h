@@ -18,7 +18,7 @@
 #ifndef SCAVISLAM_DENSE_TRACKER_H
 #define SCAVISLAM_DENSE_TRACKER_H
 
-#include <se3.h>
+#include <sophus/se3.h>
 
 #include "global.h"
 #include "quadtree.h"

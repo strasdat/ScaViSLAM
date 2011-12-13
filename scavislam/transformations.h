@@ -19,13 +19,16 @@
 #define SCAVISLAM_TRANSFORMATIONS_H
 
 #include <list>
+
+#include <sophus/se3.h>
+#ifdef MONO
+#include <sophus/sim3.h>
+#endif
+
+#include <visiontools/linear_camera.h>
+
 #include "maths_utils.h"
 #include "stereo_camera.h"
-#include "se3.h"
-#ifdef MONO
-#include "sim3.h"
-#endif
-#include "linear_camera.h"
 
 namespace ScaViSLAM
 {
