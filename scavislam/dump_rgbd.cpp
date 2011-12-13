@@ -16,16 +16,17 @@
 // along with ScaViSLAM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <pangolin/pangolin.h>
-#include <performance_monitor.h>
+
+#include <visiontools/accessor_macros.h>
+#include <visiontools/draw2d.h>
+#include <visiontools/draw3d.h>
+#include <visiontools/performance_monitor.h>
 
 #include <queue>
 
 #include "global.h"
 
-#include "accessor_macros.h"
 #include "stereo_camera.h"
-#include "draw2d.h"
-#include "draw3d.h"
 #include "frame_grabber.hpp"
 
 using namespace ScaViSLAM;
