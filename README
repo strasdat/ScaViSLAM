@@ -261,7 +261,7 @@ Try out ScaViSLAM with your RGB-D camera life:
 <<
 
 Dump RGB-D data to the hard disk (to ../data/out; create this directory or 
-set an approriate sym-link):
+set an appropriate sym-link):
 
 >>
 ./dump_rgbd ../data/rgbd_live.cfg 
@@ -282,7 +282,7 @@ rectified. Some adaptation in the code might be necessary...
 
 You are welcome to report bugs and request features at: 
 https://github.com/strasdat/ScaViSLAM/issues.
-To do so click on "New Issue", fill out the form and select the approriate
+To do so click on "New Issue", fill out the form and select the appropriate
 label ("Bug" or "Feature Request").
 Please feel free to also browse through the "ToDo" and "Future Features" 
 issues, so you can find out which features are planned to be included 
@@ -299,8 +299,8 @@ The best and easiest  way to contribute is to use the "github" way:
 (If it is only a small change/bug fix, you could also simply send me
 patch etc.)
 
-In order to maximize the likelyhood that I will accept your pull request,
-please read carefully thourgh the coding style guide:
+In order to maximize the likelihood that I will accept your pull request,
+please read carefully through the coding style guide:
 
 
 *** CODING STYLE GUIDE ***
@@ -310,7 +310,7 @@ http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml
 (Reading the document is insightful in any case, even if you don't agree with
 "google's" decision!)
 
-I am especially strick about the following rules:
+I am especially strict about the following rules:
 
  - "When defining a function, parameter order is: inputs, then outputs."
  - "All parameters passed by reference must be labeled const."
@@ -341,11 +341,11 @@ At some points, I deviate from the C++ coding style guide:
    Never pollute the general namespace '::'. 
    (However, do not use "using namespace cv" or 'using namespace pangolin'.) 
  - I use 'boost::thread'.
- - In rare cases, it is okay to habe public class members.
+ - In rare cases, it is okay to have public class members.
  - It is okay to use streams such as "cout", "cerr", "stringstream". (But 
    usually, I'd like to use "cerr" and friends only for debugging purposes...)
 
-I also deviate slightly from google's formating. Therefore the following rule
+I also deviate slightly from google's formatting. Therefore the following rule
 is the most important one:
 
 "Use common sense and BE CONSISTENT.
@@ -355,9 +355,9 @@ determine its style. If they use spaces around their if clauses, you should,
 too. If their comments have little boxes of stars around them, make your 
 comments have little boxes of stars around them too." 
 
-(All cites in "quatation marks" are from the google coding style guide.)
+(All cites in "quotation marks" are from the google coding style guide.)
 
-If you would like to use automatic identation, I recommend you to use
+If you would like to use automatic indentation, I recommend you to use
 the standard setting in QtCreator 1.3.1 (or newer), however with 
 "Tools/Options/Text Editor/Behavior/Indent size = 2" and a maximal number of 
 80 characters per line (i.e. mark 
