@@ -28,37 +28,39 @@
 #include "keyframes.h"
 #include "transformations.h"
 
-//TODO: implement sub-pixel using LK tracking or ESM
+//TODO: improve sub-pixel using LK tracking or ESM
 namespace ScaViSLAM
 {
 
-//TODO: make faster
 template <class Camera>
-int GuidedMatcher<Camera>
-::matchPatchZeroMeanSSD(const cv::Mat & patch_cur,
-                   const cv::Mat & patch_key,
-                   int sumA,
-                   int sumAA)
+uint8_t GuidedMatcher<Camera>::KEY_PATCH[BOX_AREA];
+template <class Camera>
+uint8_t GuidedMatcher<Camera>::CUR_PATCH[BOX_AREA];
+
+
+//TODO: make even faster by ensure data alignment
+template <class Camera>
+void GuidedMatcher<Camera>
+::matchPatchZeroMeanSSD(int sumA,
+                        int sumAA,
+                        int *znssd)
 {
-  int patch_size = patch_cur.size().width;
-  int N = patch_size * patch_size;
+  uint32_t sumB_uint = 0;
+  uint32_t sumBB_uint = 0;
+  uint32_t sumAB_uint = 0;
 
-  int sumB = 0;
-  int sumBB = 0;
-  int sumAB = 0;
-
-  for(int h = 0; h<patch_size; ++h)
+  // Written in a way so set clever compilers (e.g. gcc) can do auto
+  // vectorization!
+  for(int r = 0; r < BOX_AREA; r++)
   {
-    const uint8_t * patch_cur_ptr = patch_cur.ptr(h,0);
-    const uint8_t * patch_key_ptr = patch_key.ptr(h,0);
-    for(int w = 0; w < patch_size; w++)
-    {
-      int cur_pixel = patch_cur_ptr[w];
-      sumB += cur_pixel;
-      sumBB += cur_pixel*cur_pixel;
-      sumAB += cur_pixel * patch_key_ptr[w];
-    };
+    uint8_t cur_pixel = CUR_PATCH[r];
+    sumB_uint += cur_pixel;
+    sumBB_uint += cur_pixel*cur_pixel;
+    sumAB_uint += cur_pixel * KEY_PATCH[r];
   }
+  int sumB = sumB_uint;
+  int sumBB = sumBB_uint;
+  int sumAB = sumAB_uint;
 
   // zero mean sum of squared differences (SSD)
   // sum[ ((A-mean(A)) - (B-mean(B))^2 ]
@@ -68,18 +70,38 @@ int GuidedMatcher<Camera>
   // = sum[ (A-B)^2 ] - N * (mean(A)-mean(B))^2
   // = sum[ A^2-2AB-B^2 ] - 1/N * (sumA-sumB)^2
   // = sumAA-2*sumAB-sumBB - 1/N * (sumA^2-2*sumA*sumB-sumB^2)
-  return sumAA-2*sumAB-sumBB - (sumA*sumA - 2*sumA*sumB - sumB*sumB)/N;
+  *znssd = sumAA-2*sumAB-sumBB - (sumA*sumA - 2*sumA*sumB - sumB*sumB)/BOX_AREA;
+}
+
+//TODO: make even faster by ensure data alignment
+template <class Camera>
+void GuidedMatcher<Camera>
+::computePatchScores(int * sumA,
+                     int * sumAA)
+{
+  uint32_t sumA_uint = 0;
+  uint32_t sumAA_uint = 0;
+
+
+  // Written in a way so set clever compilers (e.g. gcc) can do auto
+  // vectorization!
+  for(int r = 0; r < BOX_AREA; r++)
+  {
+    uint8_t n = KEY_PATCH[r];
+    sumA_uint += n;
+    sumAA_uint += n*n;
+  }
+  *sumA = sumA_uint;
+  *sumAA = sumAA_uint ;
 }
 
 template <class Camera>
 bool GuidedMatcher<Camera>
 ::computePrediction(const SE3 & T_cur_from_w,
-                    const SE3XYZ & se3xyz,
                     const typename ALIGNED<Camera>::vector & cam_vec,
                     const tr1::shared_ptr<CandidatePoint<Camera::obs_dim> >
                     & ap,
                     const ALIGNED<SE3>::int_hash_map & T_me_from_world_map,
-                    int HALFBOXSIZE,
                     Vector2d * uv_pyr,
                     SE3 * T_anchorkey_from_w)
 {
@@ -103,7 +125,7 @@ bool GuidedMatcher<Camera>
       = ap->anchor_obs_pyr.head(2);
 
   if (!cam_vec[ap->anchor_level].isInFrame(
-        Vector2i(key_uv_pyr[0],key_uv_pyr[1]),HALFBOXSIZE))
+        Vector2i(key_uv_pyr[0],key_uv_pyr[1]),HALFBOX_SIZE))
   {
     return false;
   }
@@ -116,27 +138,7 @@ bool GuidedMatcher<Camera>
   {
     return false;
   }
-
-
   return true;
-}
-
-template <class Camera>
-void GuidedMatcher<Camera>
-::computePatchScores(const cv::Mat & patch,
-                     int * pixel_sum,
-                     int * pixel_sum_square)
-{
-  for(int r = 0; r < patch.size().width; r++)
-  {
-    const uint8_t * patch_pointer = patch.ptr(r,0);
-    for(int c = 0; c < patch.size().height; c++)
-    {
-      int n = patch_pointer[c];
-      (*pixel_sum) += n;
-      (*pixel_sum_square) += n*n;
-    };
-  }
 }
 
 template <class Camera>
@@ -144,36 +146,29 @@ void GuidedMatcher<Camera>
 ::matchCandidates(const ALIGNED<QuadTreeElement<int> >::list & candidates,
                   const Frame & cur_frame,
                   const typename ALIGNED<Camera>::vector & cam_vec,
-                  const cv::Mat & ap_patch,
                   int pixel_sum,
                   int pixel_sum_square,
                   int level,
-                  int HALFBOXSIZE,
-                  MatchData * match_data)
+                  MatchData *match_data)
 {
-  int BOXSIZE = HALFBOXSIZE*2;
-  assert(ap_patch.size().width==BOXSIZE);
-  assert(ap_patch.size().height==BOXSIZE);
   for (list<QuadTreeElement<int> >::const_iterator it = candidates.begin();
        it!=candidates.end(); ++it)
   {
     Vector2i cur_uvi = it->pos.cast<int>();
-    if (!cam_vec[level].isInFrame(cur_uvi,HALFBOXSIZE + 2))
+    if (!cam_vec[level].isInFrame(cur_uvi,HALFBOX_SIZE + 2))
     {
       continue;
     }
-    cv::Mat cur_patch = cur_frame.pyr.at(level)
-        (cv::Range(cur_uvi[1]-HALFBOXSIZE,
-                   cur_uvi[1]+HALFBOXSIZE),
-         cv::Range(cur_uvi[0]-HALFBOXSIZE,
-                   cur_uvi[0]+HALFBOXSIZE));
-    assert(cur_patch.size().width==BOXSIZE);
-    assert(cur_patch.size().height==BOXSIZE);
 
-    double znssd
-        = matchPatchZeroMeanSSD(cur_patch, ap_patch,
-                                pixel_sum, pixel_sum_square);
-
+    cv::Mat cur_patch(8,8,CV_8U,&(CUR_PATCH[0]));
+    cur_frame.pyr.at(level)
+        (cv::Range(cur_uvi[1]-HALFBOX_SIZE,
+                   cur_uvi[1]+HALFBOX_SIZE),
+         cv::Range(cur_uvi[0]-HALFBOX_SIZE,
+                   cur_uvi[0]+HALFBOX_SIZE)).copyTo(cur_patch);
+    int znssd = 0;
+    matchPatchZeroMeanSSD(pixel_sum, pixel_sum_square,
+                          &znssd);
 
     if (znssd<match_data->min_dist)
     {
@@ -226,8 +221,7 @@ cv::Mat GuidedMatcher<Camera>
          const Vector2f & uv_pyr)
 {
   cv::Mat patch_out(cv::Size(patch_with_border.size().width-2,
-                             patch_with_border.size().height-2),
-                    CV_32F);
+                             patch_with_border.size().height-2),  CV_32F);
 
   for(int h = 0; h < patch_out.size().height; ++h)
   {
@@ -326,7 +320,6 @@ void GuidedMatcher<Camera>
         const ALIGNED<SE3>::int_hash_map & T_me_from_world_map,
         const list< tr1::shared_ptr<CandidatePoint<Camera::obs_dim> > >
         & ap_map,
-        int HALFBOXSIZE,
         int SEARCHRADIUS,
         int thr_mean,
         int thr_std,
@@ -338,10 +331,6 @@ void GuidedMatcher<Camera>
 
   SE3 T_cur_from_w = T_cur_from_actkey*T_actkey_from_w;
 
-  SE3XYZ se3xyz(cam_vec.at(0));
-
-  int BOXSIZE = HALFBOXSIZE*2;
-
   for (typename ALIGNED<tr1::shared_ptr<CandidatePoint<Camera::obs_dim> > >
        ::list::const_iterator it = ap_map.begin(); it!=ap_map.end();++it)
   {
@@ -351,11 +340,9 @@ void GuidedMatcher<Camera>
     Vector2d uv_pyr;
     SE3 T_anchorkey_from_w;
     bool is_prediction_valid = computePrediction(T_cur_from_w,
-                                                 se3xyz,
                                                  cam_vec,
                                                  ap,
                                                  T_me_from_world_map,
-                                                 HALFBOXSIZE,
                                                  &uv_pyr,
                                                  &T_anchorkey_from_w);
     if (is_prediction_valid==false)
@@ -373,26 +360,31 @@ void GuidedMatcher<Camera>
         = GET_MAP_ELEM(ap->anchor_id, keyframe_map).pyr.at(ap->anchor_level);
     Homography homo(T_cur_from_w*T_anchorkey_from_w.inverse());
 
-    cv::Mat key_patch_with_border =
-        warpPatchProjective(kf, homo, ap->xyz_anchor, ap->normal_anchor,
-                            ap->anchor_obs_pyr.head(2),
-                            cam_vec[ap->anchor_level], HALFBOXSIZE+1);
+
+    cv::Mat key_patch_with_border
+        = warpPatchProjective(kf, homo, ap->xyz_anchor, ap->normal_anchor,
+                              ap->anchor_obs_pyr.head(2),
+                              cam_vec[ap->anchor_level], HALFBOX_SIZE+1);
     cv::Mat key_patch
         = key_patch_with_border(cv::Rect(cv::Point(1,1),
-                                         cv::Size(BOXSIZE, BOXSIZE)));
+                                         cv::Size(BOX_SIZE, BOX_SIZE)));
 
     int pixel_sum = 0;
     int pixel_sum_square = 0;
-    computePatchScores(key_patch, &pixel_sum, &pixel_sum_square);
+
+    cv::Mat data_wrap(8,8, CV_8U, &(KEY_PATCH[0]));
+    key_patch.copyTo(data_wrap);
+
+    computePatchScores(&pixel_sum, &pixel_sum_square);
 
     if (pixel_sum*pixel_sum-pixel_sum_square
-        <thr_std*thr_std*BOXSIZE*BOXSIZE)
+        <(int)(thr_std*thr_std*BOX_SIZE*BOX_SIZE))
       continue;
 
 
-    MatchData match_data(thr_mean*thr_mean*BOXSIZE*BOXSIZE);
-    matchCandidates(candidates, cur_frame, cam_vec, key_patch,
-                    pixel_sum, pixel_sum_square, ap->anchor_level, HALFBOXSIZE,
+    MatchData match_data(thr_mean*thr_mean*BOX_SIZE*BOX_SIZE);
+    matchCandidates(candidates, cur_frame, cam_vec,
+                    pixel_sum, pixel_sum_square, ap->anchor_level,
                     &match_data);
     SE3 T_anchorkey_from_actkey = T_anchorkey_from_w*T_w_from_actkey;
     Vector3d xyz_actkey = T_anchorkey_from_actkey.inverse()*ap->xyz_anchor;
@@ -409,25 +401,25 @@ cv::Mat GuidedMatcher<Camera>
                       const Vector3d & normal_c1,
                       const Vector2d & key_uv,
                       const Camera & cam,
-                      int HALFBOXSIZE)
+                      int halfpatch_size)
 {
   Matrix3d H_cur_from_key
       = (cam.intrinsics()
          *homo.calc_c2_from_c1(normal_c1,xyz_c1)
          *cam.intrinsics_inv());
 
-  int BOXSIZE = HALFBOXSIZE*2 ;
+  int patch_size = halfpatch_size*2 ;
   Vector2d center_cur = project2d(H_cur_from_key * unproject2d(key_uv));
 
   Matrix3d H_key_from_cur = H_cur_from_key.inverse();
-  cv::Mat ap_patch(BOXSIZE,BOXSIZE,CV_8UC1);
+  cv::Mat ap_patch(patch_size,patch_size,CV_8UC1);
 
-  for (int ix=0; ix<BOXSIZE; ix++)
+  for (int ix=0; ix<patch_size; ix++)
   {
-    for (int iy=0; iy<BOXSIZE; iy++)
+    for (int iy=0; iy<patch_size; iy++)
     {
-      Vector3d idx(center_cur[0]+ix-HALFBOXSIZE,
-                   center_cur[1]+iy-HALFBOXSIZE,1);
+      Vector3d idx(center_cur[0]+ix-halfpatch_size,
+                   center_cur[1]+iy-halfpatch_size,1);
       Vector2d r = (project2d(H_key_from_cur*idx));
 
       double x = floor(r[0]);

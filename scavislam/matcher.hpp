@@ -76,7 +76,6 @@ public:
                               T_me_from_world_map,
                               const list< tr1::shared_ptr<
                               CandidatePoint<Camera::obs_dim> > > & ap_map,
-                              int HALFBOXSIZE,
                               int SEARCHRADIUS,
                               int thr_mean,
                               int thr_std,
@@ -89,9 +88,16 @@ public:
                               const Vector3d & normal,
                               const Vector2d & key_uv,
                               const Camera & cam,
-                              int HALFBOXSIZE);
+                              int halfpatch_size);
 
 private:
+//  struct aligned_data
+//  {
+//    uint8_t v[64];
+//  }  __attribute__ ((__aligned__(16)));
+
+  typedef uint8_t aligned_uint8_t __attribute__ ((__aligned__(16)));
+
   struct MatchData
   {
     explicit MatchData(int min_dist)
@@ -99,16 +105,21 @@ private:
         index(-1),
         uv_pyr(0,0)
     {}
-    double min_dist;
+    int min_dist;
     int index;
     Vector2i uv_pyr;
   };
 
-  static int
-  matchPatchZeroMeanSSD      (const cv::Mat & patch_cur,
-                              const cv::Mat & patch_key,
+  static void
+  matchPatchZeroMeanSSD      (//const aligned_uint8_t * data_cur,
+                              //const aligned_uint8_t * data_key,
                               int key_pixel_sum,
-                              int key_pixel_sum_sq);
+                              int key_pixel_sum_sq,
+                              int * znssd);
+  static void
+  computePatchScores         (//const aligned_uint8_t * data,
+                              int * pixel_sum,
+                              int * pixel_sum_square);
 
 
   static cv::Mat
@@ -130,25 +141,18 @@ private:
                               candidates,
                               const Frame & cur_frame,
                               const typename ALIGNED<Camera>::vector & cam_vec,
-                              const cv::Mat & ap_patch,
                               int pixel_sum,
                               int pixel_sum_square,
                               int level,
-                              int HALFBOXSIZE,
                               MatchData * match_data);
-
-  static void
-  computePatchScores         (const cv::Mat & patch,
-                              int * pixel_sum,
-                              int * pixel_sum_square);
 
   static bool
   computePrediction          (const SE3 & T_w_from_cur,
-                              const SE3XYZ & se3xyz,
                               const typename ALIGNED<Camera>::vector & cam_vec,
-                              const tr1::shared_ptr<CandidatePoint<Camera::obs_dim> > & ap,
-                              const ALIGNED<SE3>::int_hash_map & T_me_from_world_map,
-                              int HALFBOXSIZE,
+                              const tr1::shared_ptr<
+                              CandidatePoint<Camera::obs_dim> > & ap,
+                              const ALIGNED<SE3>::int_hash_map
+                              & T_me_from_world_map,
                               Vector2d * uv_pyr,
                               SE3 * T_anchorkey_from_w);
 
@@ -164,6 +168,13 @@ private:
                               const Vector2i & uv_pyr_in,
                               int level,
                               Vector2f * uv_pyr_pout);
+
+  static const int HALFBOX_SIZE = 4;
+  static const int BOX_SIZE = HALFBOX_SIZE*2;
+  static const int BOX_AREA = BOX_SIZE*BOX_SIZE;
+
+  static uint8_t KEY_PATCH[BOX_AREA];
+  static uint8_t CUR_PATCH[BOX_AREA];
 
   DISALLOW_COPY_AND_ASSIGN(GuidedMatcher)
 };

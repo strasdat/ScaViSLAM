@@ -362,7 +362,7 @@ the QtCreator (1.4.0 or newer) for code editing. You can import the ScaViSLAM
 code style using "coding_style.xml":
  * Open "ScaViSLAM" project in QtCreator.
  * Click on "Projects". (Select "ScaViSLAM" tap in case several projects are 
-   opwen.)
+   open.)
  * Click on "Editor Settings". 
  * Select "Editor Settings: Custom"
  * Click on "Coding Style Settings-->Import..." and select "coding_style.xml".

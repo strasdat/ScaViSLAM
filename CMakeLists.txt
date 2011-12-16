@@ -15,9 +15,16 @@ IF( NOT PCL_SUPPORT )
   SET(PCL_SUPPORT OFF)
 ENDIF()
 
+IF( NOT SSE4_1_SUPPORT )
+  SET(SSE4_1_SUPPORT OFF)
+ENDIF()
+
+
 IF(CUDA_SUPPORT)
   MESSAGE ("CUDA SUPPORT ON")
   ADD_DEFINITIONS(-DSCAVISLAM_CUDA_SUPPORT)
+ELSE()
+  MESSAGE ("CUDA SUPPORT OFF")
 ENDIF()
 
 IF(PCL_SUPPORT)
@@ -25,6 +32,8 @@ IF(PCL_SUPPORT)
   ADD_DEFINITIONS(-DSCAVISLAM_PCL_SUPPORT)
   FIND_PACKAGE(PCL 1.2 REQUIRED)
   ADD_DEFINITIONS(${PCL_DEFINITIONS})
+ELSE()
+  MESSAGE ("PCL SUPPORT OFF")
 ENDIF()
 
 IF( NOT CMAKE_BUILD_TYPE )
@@ -33,10 +42,21 @@ ENDIF()
 
 IF (CMAKE_COMPILER_IS_GNUCXX )
   SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g")
-  SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -g ")
+
+  IF( NOT SSE4_1_SUPPORT )
+    SET(SSE4_1_SUPPORT OFF)
+  ENDIF()
+  IF(SSE4_1_SUPPORT)
+    MESSAGE ("SSE 4.1 SUPPORT ON")
+    SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -msse4.1 -g")
+  ELSE()
+    SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -g")
+    MESSAGE ("SSE 4.1  SUPPORT OFF")
+  ENDIF()
   ADD_DEFINITIONS("-Wall -Werror -Wno-unused-variable
-                   -Wno-unused-but-set-variable -Wno-unknown-pragmas ")
+                   -Wno-unused-but-set-variable -Wno-unknown-pragmas")
 ENDIF()
+
 
 
 SET (INCLUDE_DIRS "EXTERNAL/eigen3/"
@@ -61,11 +81,11 @@ SET (INCLUDE_DIRS "EXTERNAL/eigen3/"
                   "EXTERNAL/Sophus"
                   "EXTERNAL/VisionTools")
 
- LIST(APPEND CMAKE_LIBRARY_PATH EXTERNAL/g2o/lib
-                                EXTERNAL/opencv2/svs_build/lib/
-                                EXTERNAL/Pangolin/svs_build/pangolin
-                                EXTERNAL/Sophus/svs_build/
-                                EXTERNAL/VisionTools/svs_build/)
+LIST(APPEND CMAKE_LIBRARY_PATH EXTERNAL/g2o/lib
+                               EXTERNAL/opencv2/svs_build/lib/
+                               EXTERNAL/Pangolin/svs_build/pangolin
+                               EXTERNAL/Sophus/svs_build/
+                               EXTERNAL/VisionTools/svs_build/)
 
 SET (LIB_NAMES GL pangolin glut g2o_stuff g2o_core g2o_solver_csparse
                VisionTools Sophus 

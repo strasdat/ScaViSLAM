@@ -772,8 +772,6 @@ bool StereoFrontend
 
   BA_SE3_XYZ_STEREO ba;
 
-  int BOXSIZE = 8;
-  int HALFBOXSIZE = BOXSIZE/2;
   GuidedMatcher<StereoCamera>::match(keyframe_map,
                                      T_cur_from_actkey_,
                                      cur_frame_,
@@ -782,7 +780,6 @@ bool StereoFrontend
                                      actkey_id,
                                      neighborhood_->T_me_from_w_map,
                                      new_point_list_ringbuffer_,
-                                     HALFBOXSIZE,
                                    #ifdef SCAVISLAM_CUDA_SUPPORT
                                      4,
                                    #else
@@ -800,7 +797,6 @@ bool StereoFrontend
                                      actkey_id,
                                      neighborhood_->T_me_from_w_map,
                                      neighborhood_->point_list,
-                                     HALFBOXSIZE,
                                    #ifdef SCAVISLAM_CUDA_SUPPORT
                                      4,
                                    #else
