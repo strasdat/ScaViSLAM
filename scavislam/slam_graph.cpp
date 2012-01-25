@@ -18,16 +18,16 @@
 #include "slam_graph.hpp"
 
 #include <queue>
-#include <g2o/core/graph_optimizer_sparse.h>
 #include <g2o/core/block_solver.h>
+#include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/solvers/csparse/linear_solver_csparse.h>
+
 
 
 #include <visiontools/accessor_macros.h>
 #include <visiontools/stopwatch.h>
 
 #include "maths_utils.h"
-#include "g2o_types/anchored_points.h"
 
 namespace ScaViSLAM
 {
@@ -323,77 +323,87 @@ void SlamGraph<Frame,Cam,Proj,ObsDim>
            Statistics * stats)
 {
   g2o::SparseOptimizer optimizer;
-  setupG2o(&optimizer);
+  G2oCameraParameters  * g2o_cam
+      = new G2oCameraParameters(cam_.principal_point(),
+                                cam_.focal_length(),
+                                cam_.baseline());
+  g2o_cam->setId(0);
+
+  //cerr << "VOR" << optimizer.numParameters() << endl;
+  setupG2o(g2o_cam, &optimizer);
+  //cerr << "AFTERs" << optimizer.numParameters() << endl;
 
   copyDataToG2o(opt_params, &optimizer);
 
-  for (g2o::HyperGraph::EdgeSet::const_iterator it = optimizer.edges().begin();
-       it!=optimizer.edges().end(); ++it)
-  {
-    G2oEdgeProjectPSI2UVU * e = dynamic_cast<G2oEdgeProjectPSI2UVU *>(*it);
-    if (e!=NULL)
-    {
-      assert(e->vertices().size()==3);
-      for (int i=0; i<3; ++i)
-      {
-        g2o::OptimizableGraph::Vertex* from
-            = static_cast<g2o::OptimizableGraph::Vertex*>(e->vertices().at(i));
-        assert(from!=NULL);
+//  for (g2o::HyperGraph::EdgeSet::const_iterator it = optimizer.edges().begin();
+//       it!=optimizer.edges().end(); ++it)
+//  {
+//    G2oEdgeProjectPSI2UVU * e = dynamic_cast<G2oEdgeProjectPSI2UVU *>(*it);
+//    if (e!=NULL)
+//    {
+//      assert(e->vertices().size()==3);
+//      for (int i=0; i<3; ++i)
+//      {
+//        g2o::OptimizableGraph::Vertex* from
+//            = static_cast<g2o::OptimizableGraph::Vertex*>(e->vertices().at(i));
+//        assert(from!=NULL);
 
-        int ii = from->id();
-        int aa = ii;
-        aa = aa;
+//        int ii = from->id();
+//        int aa = ii;
+//        aa = aa;
 
 
-        int fromDim = from->dimension();
-        if (i==0)
-          assert(fromDim==3);
-        else
-          assert(fromDim==6);
-      }
-    }
-  }
+//        int fromDim = from->dimension();
+//        if (i==0)
+//          assert(fromDim==3);
+//        else
+//          assert(fromDim==6);
+//      }
+//    }
+//  }
 
   optimizer.initializeOptimization();
 
-  for (g2o::HyperGraph::EdgeSet::const_iterator it = optimizer.edges().begin();
-       it!=optimizer.edges().end(); ++it)
-  {
-    G2oEdgeProjectPSI2UVU * e = dynamic_cast<G2oEdgeProjectPSI2UVU *>(*it);
-    if (e!=NULL)
-    {
-      assert(e->vertices().size()==3);
-      for (int i=0; i<3; ++i)
-      {
-        g2o::OptimizableGraph::Vertex* from
-            = static_cast<g2o::OptimizableGraph::Vertex*>(e->vertices().at(i));
-        assert(from!=NULL);
+//  for (g2o::HyperGraph::EdgeSet::const_iterator it = optimizer.edges().begin();
+//       it!=optimizer.edges().end(); ++it)
+//  {
+//    G2oEdgeProjectPSI2UVU * e = dynamic_cast<G2oEdgeProjectPSI2UVU *>(*it);
+//    if (e!=NULL)
+//    {
+//      assert(e->vertices().size()==3);
+//      for (int i=0; i<3; ++i)
+//      {
+//        g2o::OptimizableGraph::Vertex* from
+//            = static_cast<g2o::OptimizableGraph::Vertex*>(e->vertices().at(i));
+//        assert(from!=NULL);
 
-        int ii = from->id();
-        int aa = ii;
-        aa = aa;
+//        int ii = from->id();
+//        int aa = ii;
+//        aa = aa;
 
-        int fromDim = from->dimension();
-        if (i==0)
-          assert(fromDim==3);
-        else
-          assert(fromDim==6);
-      }
-    }
-  }
+//        int fromDim = from->dimension();
+//        if (i==0)
+//          assert(fromDim==3);
+//        else
+//          assert(fromDim==6);
+//      }
+//    }
+//  }
 
   double static lambda = -1;
+  g2o::OptimizationAlgorithmLevenberg * lm
+      = static_cast<g2o::OptimizationAlgorithmLevenberg *>(optimizer.solver());
 
   if (lambda>-1)
   {
-    optimizer.setUserLambdaInit(min(1000000000., max(EPS,lambda)));
+    lm->setUserLambdaInit(min(1000000000., max(EPS,lambda)));
   }
 
   StopWatch sw;
   sw.start();
   optimizer.optimize(opt_params.num_iters);
   sw.stop();
-  lambda = optimizer.currentLambda();
+  lambda = lm->currentLambda();
 
   if (stats!=NULL)
   {
@@ -948,7 +958,7 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
   G2oVertexPointXYZ * v_point = new G2oVertexPointXYZ;
 
   v_point->setId(g2o_point_id);
-  v_point->estimate() = invert_depth(psi_anchor);
+  v_point->setEstimate(invert_depth(psi_anchor));
 
   optimizer->addVertex(v_point);
 }
@@ -1094,15 +1104,23 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
 
 template <typename Pose, typename Cam, typename Proj, int ObsDim>
 void SlamGraph<Pose,Cam,Proj,ObsDim>
-::setupG2o(g2o::SparseOptimizer * optimizer)
+::setupG2o(G2oCameraParameters * g2o_cam,
+           g2o::SparseOptimizer * optimizer)
 {
-  optimizer->setMethod(g2o::SparseOptimizer::LevenbergMarquardt);
   optimizer->setVerbose(true);
-  optimizer->setMaxTrialsAfterFailure(5);
   typename g2o::BlockSolverX::LinearSolverType * linearSolver
       = SlamGraphMethods::allocateLinearSolver<g2o::BlockSolverX>();
-  optimizer->setSolver(new g2o::BlockSolverX(optimizer,linearSolver));
-  optimizer->solver()->setSchur(false);
+  g2o::BlockSolverX * block_solver
+      = new g2o::BlockSolverX(linearSolver);
+  g2o::OptimizationAlgorithmLevenberg * lm
+      = new g2o::OptimizationAlgorithmLevenberg(block_solver);
+  lm->setMaxTrialsAfterFailure(5);
+  optimizer->setAlgorithm(lm);
+
+  if (!optimizer->addParameter(g2o_cam))
+  {
+    assert(false);
+  }
 }
 
 }

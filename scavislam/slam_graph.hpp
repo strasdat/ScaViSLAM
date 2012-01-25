@@ -21,6 +21,8 @@
 #include "global.h"
 #include "data_structures.h"
 
+#include "g2o_types/anchored_points.h"
+
 namespace g2o
 {
 class SparseOptimizer;
@@ -559,7 +561,8 @@ public:
                               Pose * T_2_from_1,
                               Matrix<double,Pose::DoF,Pose::DoF> * Lambda);
     void
-    setupG2o                 (g2o::SparseOptimizer * optimizer);
+    setupG2o                 (G2oCameraParameters * g2o_cam,
+                              g2o::SparseOptimizer * optimizer);
 
     void
     copyDataToG2o            (const OptParams & opt_params,

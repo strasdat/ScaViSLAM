@@ -37,32 +37,60 @@ using namespace Eigen;
 using namespace ScaViSLAM;
 using namespace Sophus;
 
+class G2oCameraParameters : public g2o::Parameter
+{
+public:
+  G2oCameraParameters();
+
+  G2oCameraParameters        (const Vector2d & principle_point,
+                              double focal_length,
+                              double baseline)
+    : principle_point_(principle_point),
+      focal_length_(focal_length),
+      baseline_(baseline){}
+
+  Vector2d
+  cam_map                    (const Vector3d & trans_xyz) const;
+
+  Vector3d
+  stereocam_uvu_map          (const Vector3d & trans_xyz) const;
+
+  virtual bool
+  read                       (std::istream& is)
+  {
+    assert(false);
+  }
+
+  virtual bool
+  write                      (std::ostream& os) const
+  {
+    assert(false);
+  }
+
+
+  Vector2d principle_point_;
+  double focal_length_;
+  double baseline_;
+};
 
 class G2oVertexSE3 : public g2o::BaseVertex<6, SE3>
 {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  G2oVertexSE3               ();
+  G2oVertexSE3               (){}
 
   virtual bool
   read                       (std::istream& is);
+
   virtual bool
   write                      (std::ostream& os) const;
 
   virtual void
-  oplus                      (double * update);
-  Vector2d
-  cam_map                    (const Vector3d & trans_xyz) const;
-  Vector3d
-  stereocam_uvu_map          (const Vector3d & trans_xyz) const;
+  oplusImpl                  (const double * update);
 
   virtual void
-  setToOrigin                () {}
-
-  Vector2d principle_point;
-  double focal_length;
-  double baseline;
+  setToOriginImpl            () {}
 };
 
 class G2oVertexPointXYZ : public g2o::BaseVertex<3, Vector3d>
@@ -77,10 +105,10 @@ public:
   virtual bool
   write                      (std::ostream& os) const;
   virtual void
-  oplus                      (double * update);
+  oplusImpl                  (const double * update);
 
   virtual void
-  setToOrigin                ()
+  setToOriginImpl            ()
   {
     _estimate.setZero();
   }
@@ -91,7 +119,11 @@ class G2oEdgeProjectPSI2UVU : public  g2o::BaseMultiEdge<3, Vector3d>
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  G2oEdgeProjectPSI2UVU(){}
+  G2oEdgeProjectPSI2UVU()
+  {
+    resizeParameters(1);
+    installParameter(g2o_cam, 0);
+  }
 
   virtual bool
   read                       (std::istream& is);
@@ -101,6 +133,8 @@ public:
   computeError               ();
   virtual
   void linearizeOplus        ();
+
+  G2oCameraParameters * g2o_cam;
 };
 
 class G2oEdgeSim3ProjectUVQ : public  g2o::BaseMultiEdge<2, Vector2d>
@@ -108,7 +142,11 @@ class G2oEdgeSim3ProjectUVQ : public  g2o::BaseMultiEdge<2, Vector2d>
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  G2oEdgeSim3ProjectUVQ      (){}
+  G2oEdgeSim3ProjectUVQ      ()
+  {
+    resizeParameters(1);
+    installParameter(g2o_cam, 0);
+  }
 
   virtual bool
   read                       (std::istream& is);
@@ -117,6 +155,8 @@ public:
 
   void
   computeError               ();
+
+  G2oCameraParameters * g2o_cam;
 };
 
 class G2oEdgeSE3

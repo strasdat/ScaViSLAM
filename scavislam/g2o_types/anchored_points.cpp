@@ -22,38 +22,39 @@
 namespace ScaViSLAM
 {
 
-G2oVertexSE3
-::G2oVertexSE3()
-  : principle_point(Vector2d(0., 0.)),
-    focal_length(1.),
-    baseline(0.5)
+G2oCameraParameters
+::G2oCameraParameters()
+  : principle_point_(Vector2d(0., 0.)),
+    focal_length_(1.),
+    baseline_(0.5)
 {
 }
 
-void G2oVertexSE3
-::oplus(double * update_p)
-{
-  Map<Vector6d> update(update_p);
-  estimate() = SE3::exp(update)*estimate();
-}
-
-Vector2d  G2oVertexSE3
+Vector2d  G2oCameraParameters
 ::cam_map(const Vector3d & trans_xyz) const
 {
   Vector2d proj = project2d(trans_xyz);
   Vector2d res;
-  res[0] = proj[0]*focal_length + principle_point[0];
-  res[1] = proj[1]*focal_length + principle_point[1];
+  res[0] = proj[0]*focal_length_ + principle_point_[0];
+  res[1] = proj[1]*focal_length_ + principle_point_[1];
   return res;
 }
 
-Vector3d G2oVertexSE3
+Vector3d G2oCameraParameters
 ::stereocam_uvu_map(const Vector3d & trans_xyz) const
 {
   Vector2d uv_left = cam_map(trans_xyz);
-  double proj_x_right = (trans_xyz[0]-baseline)/trans_xyz[2];
-  double u_right = proj_x_right*focal_length + principle_point[0];
+  double proj_x_right = (trans_xyz[0]-baseline_)/trans_xyz[2];
+  double u_right = proj_x_right*focal_length_ + principle_point_[0];
   return Vector3d(uv_left[0],uv_left[1],u_right);
+}
+
+
+void G2oVertexSE3
+::oplusImpl(const double * update_p)
+{
+  Map<const Vector6d> update(update_p);
+  setEstimate(SE3::exp(update)*estimate());
 }
 
 //TODO: implement, but first remove camera parameters from vertex state
@@ -74,11 +75,10 @@ bool G2oVertexSE3
 
 
 
-
 void G2oVertexPointXYZ
-::oplus(double * update_p)
+::oplusImpl(const double * update_p)
 {
-  Map<Vector3d> update(update_p);
+  Map<const Vector3d> update(update_p);
   _estimate += update;
 }
 
@@ -101,7 +101,7 @@ bool G2oVertexPointXYZ
   {
     is >> lv[i];
   }
-  estimate() = lv;
+  setEstimate(lv);
   return true;
 }
 
@@ -126,21 +126,22 @@ bool G2oEdgeProjectPSI2UVU
 bool G2oEdgeProjectPSI2UVU
 ::read(std::istream& is)
 {
-  for (int i=0; i<3; i++)
-  {
-    is  >> measurement()[i];
-  }
-  inverseMeasurement()[0] = -measurement()[0];
-  inverseMeasurement()[1] = -measurement()[1];
-  inverseMeasurement()[2] = -measurement()[2];
+  assert(false);
+//  for (int i=0; i<3; i++)
+//  {
+//    is  >> measurement()[i];
+//  }
+//  inverseMeasurement()[0] = -measurement()[0];
+//  inverseMeasurement()[1] = -measurement()[1];
+//  inverseMeasurement()[2] = -measurement()[2];
 
-  for (int i=0; i<3; i++)
-    for (int j=i; j<3; j++)
-    {
-      is >> information()(i,j);
-      if (i!=j)
-        information()(j,i)=information()(i,j);
-    }
+//  for (int i=0; i<3; i++)
+//    for (int j=i; j<3; j++)
+//    {
+//      is >> information()(i,j);
+//      if (i!=j)
+//        information()(j,i)=information()(i,j);
+//    }
   return true;
 }
 
@@ -154,8 +155,11 @@ void G2oEdgeProjectPSI2UVU
   const G2oVertexSE3 * T_anchor_from_world
       = static_cast<const G2oVertexSE3*>(_vertices[2]);
 
+  const G2oCameraParameters * cam
+      = static_cast<const G2oCameraParameters *>(parameter(0));
+
   Vector3d obs(_measurement);
-  _error = obs - T_p_from_world->stereocam_uvu_map(
+  _error = obs - cam->stereocam_uvu_map(
              T_p_from_world->estimate()
              *T_anchor_from_world->estimate().inverse()
              *invert_depth(psi->estimate()));
@@ -168,13 +172,16 @@ void G2oEdgeProjectPSI2UVU::linearizeOplus()
   G2oVertexSE3 * vpose = static_cast<G2oVertexSE3 *>(_vertices[1]);
   SE3 T_cw = vpose->estimate();
   G2oVertexSE3 * vanchor = static_cast<G2oVertexSE3 *>(_vertices[2]);
+  const G2oCameraParameters * cam
+      = static_cast<const G2oCameraParameters *>(parameter(0));
+
   SE3 A_aw = vanchor->estimate();
   SE3 T_ca = T_cw*A_aw.inverse();
   Vector3d x_a = invert_depth(psi_a);
   Vector3d y = T_ca*x_a;
   Matrix3d Jcam
-      = d_stereoproj_d_y(vpose->focal_length,
-                         vpose->baseline,
+      = d_stereoproj_d_y(cam->focal_length_,
+                         cam->baseline_,
                          y);
   _jacobianOplus[0] = -Jcam*d_Tinvpsi_d_psi(T_ca, psi_a);
   _jacobianOplus[1] = -Jcam*d_expy_d_y(y);

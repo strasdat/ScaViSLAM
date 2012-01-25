@@ -33,13 +33,8 @@ void SlamGraph<SE3,StereoCamera, SE3XYZ_STEREO, 3>
   G2oVertexSE3 * v_se3 = new G2oVertexSE3();
 
   v_se3->setId(pose_id);
-  v_se3->estimate() = T_me_from_w;
+  v_se3->setEstimate(T_me_from_w);
   v_se3->setFixed(fixed);
-
-  v_se3->focal_length = cam_.focal_length();
-  v_se3->baseline = cam_.baseline();
-  v_se3->principle_point[0] = cam_.principal_point()[0];
-  v_se3->principle_point[1] = cam_.principal_point()[1];
 
   optimizer->addVertex(v_se3);
 }
@@ -83,12 +78,15 @@ void SlamGraph<SE3,StereoCamera, SE3XYZ_STEREO, 3>
   assert(anchor_vertex->dimension()==6);
   e->vertices()[2] = anchor_vertex;
 
-  e->measurement() = obs;
-  e->inverseMeasurement() = -obs;
+  e->setMeasurement(obs);
   e->information() = Lambda;
 
   e->setRobustKernel(robustify);
   e->setHuberWidth(huber_kernel_width);
+
+  e->resizeParameters(1);
+  bool param_status = e->setParameterId(0, 0);
+  assert(param_status);
 
   optimizer->addEdge(e);
 }
@@ -115,8 +113,7 @@ void SlamGraph<SE3,StereoCamera, SE3XYZ_STEREO, 3>
   e->vertices()[1]
       = dynamic_cast<g2o::OptimizableGraph::Vertex*>(pose2_vertex);
 
-  e->measurement() = T_2_from_1;
-  e->inverseMeasurement() = T_2_from_1.inverse();
+  e->setMeasurement( T_2_from_1);
   e->information() = Lambda_2_from_1;
 
   optimizer->addEdge(e);

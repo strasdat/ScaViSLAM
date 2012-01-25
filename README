@@ -25,9 +25,7 @@ of adaptations...). It was tested on Ubuntu 11.10 - 64 bit.
  I followed the guide describe on this website, but I have not tested it on 
  32-bit linux yet. Any bug reports/patches are welcome!)
 
-WARNING: There is a bug concerning Eigen3 and gcc/g++-4.4. Do not compile
-ScaViSLAM, g2o, etc. using gcc/g++-4.4! It will compile but might produce wrong
-results! 
+WARNING: There is a bug concerning Eigen3.0 and gcc/g++-4.4. Make sure you install Eigen3.1 as explained below. 
 (see: http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2011/04/msg00013.html
 &  http://comments.gmane.org/gmane.comp.lib.eigen/2046)
 Detailed instructions are listed below.
@@ -56,8 +54,8 @@ Thus, there is an optional dependency on CUDA 4.0 or higher.
 First, find out your compiler version by typing "g++ -v".
 There are three options:
 
- Version 4.5 or higher: Everything is fine. 
-  However, CUDA requires gcc 4.4. If you want to use CUDA and you have not 
+ Version 4.4: Everything is fine. Version 4.5 or higher:
+  CUDA requires gcc 4.4. If you want to use CUDA and you have not 
   done it yet, proceed with the following steps:
    1. <<
         sudo apt-get install gcc-4.4 g++-4.4 
@@ -72,17 +70,6 @@ There are three options:
       "/usr/local/cuda/bin/nvcc.profile".
   (Description how to install CUDA 4.0 on a newer version of Ubuntu:
    http://hdfpga.blogspot.com/2011/05/install-cuda-40-on-ubuntu-1104.html)
-
- Version 4.4: Because of the problem with Eigen (see above), you NEED to install 
-  a newer version of gcc and g++ (4.5, 4.6 ,4.7 ...). Make sure that ScaViSLAM 
-  and all EXTERNAL dependencies are compiled with the newer version. Note, that
-  CUDA 4.0 still depends on gcc 4.4. 
-  (One option is to set the default compilers to 4.5. Thus, "gcc -v", "g++ -v" and
-   "c++ -v" will report 4.5 and you can proceed which the steps 2.-3. above.) 
-
- Version 4.3 or lower: You are using an old or custom version of linux. This is
-  not supported by this installation guideline. 
-  (It might work, but I guess you have to disable CUDA support.)
 
 Next, install dependencies:
 
@@ -119,18 +106,18 @@ version conflicts (e.g. different OpenCV version which might be installed
 system-wide). Please follow the guide step by step and only deviate form 
 it if you really know what you are doing ;-)
 
-Download Eigen (version 3.0.3) in folder EXTERNAL
+Download Eigen (version 3.1-alpha) in folder EXTERNAL
 
 >>
-wget http://bitbucket.org/eigen/eigen/get/3.0.3.tar.bz2
-tar xvf 3.0.3.tar.bz2
-mv eigen-eigen-3.0.3/ eigen3
+wget http://bitbucket.org/eigen/eigen/get/3.1.0-alpha1.tar.bz2
+tar xvf 3.1.0-alpha1.tar.bz2
+mv eigen-eigen-a810d5dbab47/ eigen3
 <<
 
-Check out and install g2o (fork of the g2o release hosted at openslam.org):
+Check out and install g2o (fork with slightly modified cmake file):
 
 >>
-git clone git@github.com:strasdat/g2o-fork.git g2o
+git clone git@github.com:strasdat/g2o.git
 cd g2o
 mkdir svs_build
 cd svs_build
