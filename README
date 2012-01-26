@@ -345,7 +345,7 @@ comments have little boxes of stars around them too."
 (All cites in "quotation marks" are from the google coding style guide.)
 
 If you would like to use automatic indentation, I recommend you to use
-the QtCreator (1.4.0 or newer) for code editing. You can import the ScaViSLAM
+the QtCreator (2.4.0 or newer) for code editing. You can import the ScaViSLAM
 code style using "coding_style.xml":
  * Open "ScaViSLAM" project in QtCreator.
  * Click on "Projects". (Select "ScaViSLAM" tap in case several projects are 
