@@ -37,8 +37,13 @@
 // "DTAM: Dense Tracking and Mapping in Real-Time"
 // Sec. 4.3, ICCV 2011.
 //
-// Probably the first paper introducing this kind of direct method for
-// dense tracking/visual odometry is:
+// 
+// This method is an application of the famous Lukas-Kanda tracker:
+// S. Baker, I. Matthews: Lucas-Kanade 20 Years On: A Unifying Framework
+//
+//
+// Probably one of the first papers introducing this kind of direct 
+// method for dense tracking/3D visual odometry is:
 //
 // Andrew I. Comport, Enzio Malis, P. Rives.
 // "Accurate Quadri-focal Tracking for Robust 3D Visual Odometry"

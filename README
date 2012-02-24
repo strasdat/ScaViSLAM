@@ -111,7 +111,7 @@ Download Eigen (version 3.1-alpha) in folder EXTERNAL
 >>
 wget http://bitbucket.org/eigen/eigen/get/3.1.0-alpha1.tar.bz2
 tar xvf 3.1.0-alpha1.tar.bz2
-mv eigen-eigen-a810d5dbab47/ eigen3
+mv eigen-eigen-a810d5dbab47/ eigen3.1
 <<
 
 Check out and install g2o (fork with slightly modified cmake file):
@@ -159,7 +159,7 @@ Clone and install Pangolin (68d75c2d54450d90efd2e6e2cfcd72a6a599ef58)
 >>
 git  clone -v https://github.com/stevenlovegrove/Pangolin.git
 cd Pangolin
-git checkout 68d75c2d54450d90efd2e6e2cfcd72a6a599ef58
+git checkout 5db1df
 mkdir svs_build
 cd svs_build
 cmake ..
@@ -345,7 +345,7 @@ comments have little boxes of stars around them too."
 (All cites in "quotation marks" are from the google coding style guide.)
 
 If you would like to use automatic indentation, I recommend you to use
-the QtCreator (1.4.0 or newer) for code editing. You can import the ScaViSLAM
+the QtCreator (2.4.0 or newer) for code editing. You can import the ScaViSLAM
 code style using "coding_style.xml":
  * Open "ScaViSLAM" project in QtCreator.
  * Click on "Projects". (Select "ScaViSLAM" tap in case several projects are 
