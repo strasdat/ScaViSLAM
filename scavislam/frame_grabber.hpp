@@ -28,6 +28,8 @@
 #include <opencv2/gpu/gpu.hpp>
 #endif
 
+#include "filegrabber.h"
+
 #ifdef SCAVISLAM_PCL_SUPPORT
 #include "rgbd_grabber.h"
 #endif
@@ -178,6 +180,8 @@ public:
 #ifdef SCAVISLAM_PCL_SUPPORT
   RgbdGrabber grabber;
 #endif
+  FileGrabber file_grabber_;
+  FileGrabberMonitor file_grabber_mon_;
 
   FrameGrabber               (const Camera & cam,
                               const Vector4d & cam_distortion_,
@@ -195,9 +199,6 @@ public:
   FrameData<Camera> frame_data;
 
 private:
-  void
-  preprocessFiles            (const boost::filesystem::path &,
-                              bool recursive = true );
   void
   loadParams                 ();
 
@@ -224,7 +225,7 @@ private:
 
   Params params_;
   double size_factor_;
-  vector<std::string> file_base_vec_;
+  //vector<std::string> file_base_vec_;
   std::string file_extension_;
 #ifdef SCAVISLAM_CUDA_SUPPORT
   cv::Ptr<cv::gpu::FilterEngine_GPU> dx_filter_;

@@ -82,8 +82,19 @@ initialise()
   }
   else
   {
-    preprocessFiles(params_.path_str,true);
-    std::sort(file_base_vec_.begin(),file_base_vec_.end());
+    //preprocessFiles(params_.path_str,true);
+    file_grabber_.initialize(params_.path_str,
+                             params_.base_str,
+                             params_.format_str,
+                             frame_data.frame_id,
+                             params_.color_img,
+                             !params_.color_img,
+                             params_.right_img,
+                             params_.disp_img,
+                             params_.right_img,
+                             &file_grabber_mon_);
+
+
     if (params_.rectify_frame)
     {
       intializeRectifier();
@@ -111,36 +122,6 @@ initialise()
 
 template <class Camera>
 void FrameGrabber<Camera>::
-preprocessFiles(const boost::filesystem::path & directory,
-                bool recursive)
-{
-  if(exists(directory))
-  {
-    boost::filesystem::directory_iterator end;
-    for(boost::filesystem::directory_iterator iter(directory);
-        iter!=end ; ++iter)
-    {
-      if (is_directory( *iter) )
-      {
-        if(recursive)
-          preprocessFiles(*iter) ;
-      }
-      else
-      {
-        std::string path_name = iter->path().string();
-        std::string name = params_.base_str + "left." + params_.format_str ;
-        boost::regex ex(name);
-        if (boost::regex_match(path_name.begin(),path_name.end(),ex))
-        {
-          file_base_vec_.push_back(path_name.substr(0,path_name.length()-8));
-        }
-      }
-    }
-  }
-}
-
-template <class Camera>
-void FrameGrabber<Camera>::
 processNextFrame()
 {
   frame_data.nextFrame();
@@ -148,28 +129,31 @@ processNextFrame()
   per_mon_->start("grab frame");
   if (!params_.livestream)
   {
-    std::string basename = file_base_vec_.at(frame_data.frame_id);
-    std::stringstream left_sstr, right_sstr, disp_sstr;
-    left_sstr <<  basename << "left." << params_.format_str  ;
+    FrameBundle bundle;
+    while (file_grabber_mon_.getFrameBundle(frame_data.frame_id,
+                                            &bundle)
+           ==false)
+    {
+    }
 
+   
     if (params_.color_img)
     {
 
-      frame_data.cur_left().color_uint8 = cv::imread(left_sstr.str(),1);
+      frame_data.cur_left().color_uint8 = bundle.left_color;
       cv::cvtColor(frame_data.cur_left().color_uint8,
                    frame_data.cur_left().uint8,
                    CV_BGR2GRAY);
     }
     else
     {
-      frame_data.cur_left().uint8 = cv::imread(left_sstr.str(),0);
+      frame_data.cur_left().uint8 = bundle.left_gray;
 
     }
     if (params_.disp_img)
     {
-      disp_sstr << basename << "disp." << params_.format_str ;
-      cerr << disp_sstr.str() << endl;
-      cv::Mat float_as_4uint = cv::imread(disp_sstr.str(),0);
+
+      cv::Mat float_as_4uint = bundle.disp;
       cerr << float_as_4uint.size().width << " "
            << float_as_4uint.size().height << endl;
       frame_data.disp = cv::Mat(frame_data.cur_left().uint8.size(),
@@ -180,19 +164,17 @@ processNextFrame()
     }
     else if (params_.depth_img)
     {
-      std::stringstream depth_sstr;
-      depth_sstr << basename << "depth." << params_.format_str ;
-      cerr << depth_sstr.str() << endl;
+
       //frame_data.right.uint8 = cv::imread(right_sstr.str(),0);
-      cv::Mat depth = cv::imread(depth_sstr.str(),-1);
+      cv::Mat depth = bundle.depth;
       cerr << depth.type() << endl;
       depthToDisp(depth, &frame_data.disp);
       frame_data.have_disp_img = true;
     }
     else if (params_.right_img)
     {
-      right_sstr << basename << "right." << params_.format_str ;
-      frame_data.right.uint8 = cv::imread(right_sstr.str(),0);
+
+      frame_data.right.uint8 = bundle.right;
     }
     if (params_.rectify_frame)
       rectifyFrame();

@@ -119,7 +119,8 @@ SET (CLASSES  placerecognizer
               backend
               fast_grid
               stereo_frontend
-              dense_tracking)
+              dense_tracking
+              filegrabber)
 
 
 SET (TEMPLATE ransac
