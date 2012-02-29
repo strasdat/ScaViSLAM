@@ -7,7 +7,9 @@ H. Strasdat, A.J. Davison, J.M.M. Montiel, and K. Konolige
 "Double Window Optimisation for Constant Time Visual SLAM"
 Proceedings of the IEEE International Conference on Computer Vision, 2011.
 
-Check out the related video: http://youtu.be/89CNVQ5azsc
+Check out the related videos: 
+http://youtu.be/90Rw3qDuWrw
+http://youtu.be/89CNVQ5azsc
 
 At the moment it supports calibrated stereo rigs, and RGB-D cameras.
 Monocular SLAM is NOT supported (yet).
