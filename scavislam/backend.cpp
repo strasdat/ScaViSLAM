@@ -571,9 +571,9 @@ bool Backend
   graph_.registerKeyframes(rootframe_id, T_newroot_from_w,
                            neighborid_to_strength, trackpoint_list);
 
-  dumpRegistrationData(root_frame,
-                       neighborid_to_strength,
-                       frameid_to_pointlist);
+//  dumpRegistrationData(root_frame,
+//                       neighborid_to_strength,
+//                       frameid_to_pointlist);
 
   return true;
 }
@@ -937,32 +937,32 @@ bool Backend
                         T_newloop_from_w,
                         trackpoint_list);
 
-  // Dump loop closure to hard disk
-  char name[80];
-  static int counter = 0;
-  sprintf(name,"LOOP%04d_%04d.png", counter, loop.loop_keyframe_id);
-  cv::Mat img
-      = GET_MAP_ELEM(loop.query_keyframe_id, keyframe_map_).pyr.at(0).clone();
-  img.push_back(loop_frame.pyr.at(0));
+//  // Dump loop closure to hard disk
+//  char name[80];
+//  static int counter = 0;
+//  sprintf(name,"LOOP%04d_%04d.png", counter, loop.loop_keyframe_id);
+//  cv::Mat img
+//      = GET_MAP_ELEM(loop.query_keyframe_id, keyframe_map_).pyr.at(0).clone();
+//  img.push_back(loop_frame.pyr.at(0));
 
-  for (list<StereoGraph::MyTrackPointPtr>::const_iterator it
-       = trackpoint_list.begin();
-       it!=trackpoint_list.end(); ++it)
-  {
-    const StereoGraph::MyTrackPointPtr & track_point = *it;
-    ImageFeature<3> feat_loop = track_point->feat;
-    const ImageFeature<3> & feat_query
-        = GET_MAP_ELEM(track_point->global_id, v_query.feature_table);
+//  for (list<StereoGraph::MyTrackPointPtr>::const_iterator it
+//       = trackpoint_list.begin();
+//       it!=trackpoint_list.end(); ++it)
+//  {
+//    const StereoGraph::MyTrackPointPtr & track_point = *it;
+//    ImageFeature<3> feat_loop = track_point->feat;
+//    const ImageFeature<3> & feat_query
+//        = GET_MAP_ELEM(track_point->global_id, v_query.feature_table);
 
-    cv::circle(img, cv::Point2d(feat_query.center.x(), feat_query.center.y()),
-               2, cv::Scalar(1,0,0,1),3);
-    cv::line(img, cv::Point2d(feat_query.center.x(), feat_query.center.y()),
-             cv::Point2d(feat_loop.center.x(),
-                         feat_loop.center.y() +img_height),
-             cv::Scalar(1,0,0,1),1,CV_AA);
-  }
-  cv::imwrite(name, img);
-  ++counter;
+//    cv::circle(img, cv::Point2d(feat_query.center.x(), feat_query.center.y()),
+//               2, cv::Scalar(1,0,0,1),3);
+//    cv::line(img, cv::Point2d(feat_query.center.x(), feat_query.center.y()),
+//             cv::Point2d(feat_loop.center.x(),
+//                         feat_loop.center.y() +img_height),
+//             cv::Scalar(1,0,0,1),1,CV_AA);
+//  }
+//  cv::imwrite(name, img);
+//  ++counter;
 
   return true;
 }
