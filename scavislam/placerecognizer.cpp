@@ -36,13 +36,13 @@ bool PlaceRecognizerMonitor
 {
   boost::mutex::scoped_lock lock(my_mutex_);
 
-  if (new_keyframe_stack_.size()>0
+  if (new_keyframe_queue_.size()>0
       // there is a new keyframe waiting in input stack
       && detected_loop_stack_.size()==0)
     // no detected loop is in output stack
   {
-    *data = new_keyframe_stack_.top();
-    new_keyframe_stack_.pop();
+    *data = new_keyframe_queue_.front();
+    new_keyframe_queue_.pop();
     return true;
   }
   return false;
@@ -53,7 +53,11 @@ void PlaceRecognizerMonitor
 {
   boost::mutex::scoped_lock lock(my_mutex_);
 
-  new_keyframe_stack_.push(data);
+  while(new_keyframe_queue_.size()>0)
+    new_keyframe_queue_.pop();
+
+
+  new_keyframe_queue_.push(data);
 }
 
 bool PlaceRecognizerMonitor

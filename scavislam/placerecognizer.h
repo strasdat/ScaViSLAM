@@ -63,7 +63,7 @@ public:
   addLoop                    (const DetectedLoop & loop);
 
 private:
-  stack<PlaceRecognizerData> new_keyframe_stack_;
+  queue<PlaceRecognizerData> new_keyframe_queue_;
   stack<DetectedLoop> detected_loop_stack_;
   boost::mutex my_mutex_;
 };
