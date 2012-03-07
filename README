@@ -88,7 +88,7 @@ Now, checkout/clone the ScaViSLAM repository.
 
 >>
 cd MY_SOFTWARE_DIRECTORY
-git clone git@github.com:strasdat/ScaViSLAM.git
+git clone git://github.com:strasdat/ScaViSLAM.git
 <<
 
 Now, enter the project directory
@@ -173,7 +173,7 @@ cd ../..
 Clone and install Sophus in folder EXTERNAL
 
 >>
-git clone git@github.com:strasdat/Sophus.git
+git clone git://github.com:strasdat/Sophus.git
 cd Sophus
 mkdir svs_build
 cd svs_build
@@ -185,7 +185,7 @@ cd ../..
 Install VisionTools in folder EXTERNAL
 
 >>
-git clone git@github.com:strasdat/VisionTools.git
+git clone git://github.com:strasdat/VisionTools.git
 cd VisionTools
 mkdir svs_build
 cd svs_build
