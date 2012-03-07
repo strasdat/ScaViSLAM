@@ -121,7 +121,7 @@ mv eigen-eigen-a810d5dbab47/ eigen3.1
 Check out and install g2o (fork with slightly modified cmake file):
 
 >>
-git clone git@github.com:strasdat/g2o.git
+git clone git://github.com/strasdat/g2o.git
 cd g2o
 mkdir svs_build
 cd svs_build
@@ -158,12 +158,11 @@ deactivate "USE_FFMPEF", e.g. using cmake-gui.
 cd ../..
 <<
 
-Clone and install Pangolin (68d75c2d54450d90efd2e6e2cfcd72a6a599ef58)
+Clone and install Pangolin
 
 >>
-git  clone -v https://github.com/stevenlovegrove/Pangolin.git
+git  clone git://github.com/stevenlovegrove/Pangolin.git
 cd Pangolin
-git checkout 5db1df
 mkdir svs_build
 cd svs_build
 cmake ..
