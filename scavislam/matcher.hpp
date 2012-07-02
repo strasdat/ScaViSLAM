@@ -23,6 +23,7 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "data_structures.h"
 #include "global.h"
 #include "quadtree.h"
 
@@ -72,8 +73,8 @@ public:
                               feature_tree,
                               const typename ALIGNED<Camera>::vector & cam_vec,
                               int actkey_id,
-                              const ALIGNED<SE3>::int_hash_map &
-                              T_me_from_world_map,
+                              const ALIGNED<FrontendVertex>::int_hash_map
+                              & vertex_map,
                               const list< tr1::shared_ptr<
                               CandidatePoint<Camera::obs_dim> > > & ap_map,
                               int SEARCHRADIUS,
@@ -90,11 +91,16 @@ public:
                               const Camera & cam,
                               int halfpatch_size);
 
+
+  static cv::Mat
+  warpAffinve                (const cv::Mat & frame,
+                              const SE3 & T_c2_from_c1,
+                              double depth,
+                              const Vector2d & key_uv,
+                              const Camera & cam,
+                              int halfpatch_size);
+
 private:
-//  struct aligned_data
-//  {
-//    uint8_t v[64];
-//  }  __attribute__ ((__aligned__(16)));
 
   typedef uint8_t aligned_uint8_t __attribute__ ((__aligned__(16)));
 
@@ -151,8 +157,8 @@ private:
                               const typename ALIGNED<Camera>::vector & cam_vec,
                               const tr1::shared_ptr<
                               CandidatePoint<Camera::obs_dim> > & ap,
-                              const ALIGNED<SE3>::int_hash_map
-                              & T_me_from_world_map,
+                              const ALIGNED<FrontendVertex>::int_hash_map
+                              & verte_map,
                               Vector2d * uv_pyr,
                               SE3 * T_anchorkey_from_w);
 

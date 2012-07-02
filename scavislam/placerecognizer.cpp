@@ -22,6 +22,8 @@
 #include <visiontools/accessor_macros.h>
 #include <visiontools/stopwatch.h>
 
+
+#include <opencv2/nonfree/nonfree.hpp>
 #include "ransac_models.h"
 #include "ransac.hpp"
 
@@ -173,7 +175,7 @@ void PlaceRecognizer
 ::geometricCheck(const Place & query,
                  const Place & train)
 {
-  cv::BruteForceMatcher<cv::L2<float> > matcher;
+  cv::BFMatcher matcher(cv::NORM_L2);
   vector<cv::DMatch > matches;
 
   matcher.match(query.descriptors,
@@ -192,7 +194,7 @@ void PlaceRecognizer
                             query.uvu_0_vec,
                             inliers,
                             loop.T_query_from_loop);
-
+ 
   if (inliers.size()>30)
   {
     monitor.addLoop(loop);
@@ -235,7 +237,7 @@ void PlaceRecognizer
     }
   }
 
-  cv::SurfDescriptorExtractor surf_ext(2);
+  cv::SurfDescriptorExtractor surf_ext(2, 4, 2, false);
   surf_ext.compute(pr_data.keyframe.pyr.at(0),
                    keypoints_with_depth,
                    new_loc.descriptors);
@@ -252,6 +254,7 @@ void PlaceRecognizer
   for (int r=0; r<new_loc.descriptors.rows; ++r)
   {
     const cv::Mat & query = new_loc.descriptors.row(r);
+
 
     //find corresponding words (0 to max_number_of_words)
     int num_found

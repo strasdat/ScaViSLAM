@@ -94,8 +94,6 @@ template <>
 void FrameGrabber<StereoCamera>::
 intializeRectifier()
 {
-
-  cerr << "init!" << endl;
   cv::Size image_size = frame_data.cam_vec.at(0).image_size();
   Matrix<double,3,3,RowMajor> Rleft =  SO3::exp(params_.rot_left).matrix();
   Matrix<double,3,3,RowMajor> Rright = SO3::exp(params_.rot_right).matrix();
@@ -105,7 +103,7 @@ intializeRectifier()
   Matrix<double,3,3,RowMajor> camera_matrix
       = frame_data.cam_vec.at(0).intrinsics();
 
-  cerr << camera_matrix << endl;
+ // cerr << camera_matrix << endl;
 
   Matrix<double,3,4,RowMajor> Pleft;
   Pleft.setZero();

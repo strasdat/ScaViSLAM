@@ -24,6 +24,7 @@
 #include <boost/dynamic_bitset.hpp>
 
 #include <opencv2/opencv.hpp>
+#include <opencv2/nonfree/nonfree.hpp>
 #include <opencv2/flann/flann.hpp>
 
 
@@ -132,7 +133,7 @@ computeDescriptors(const cv::Mat & img_mono,
                    cv::Mat * descriptors)
 {
   cv::Mat desc;
-  cv::SurfDescriptorExtractor surf_extr(2);
+  cv::SurfDescriptorExtractor surf_extr(2, 4, 2, false);
   surf_extr.compute(img_mono, *key_points, desc);
   for (int row=0; row<desc.rows; ++row)
   {
@@ -146,7 +147,7 @@ calculateWordsAndSaveThem(int TARGET_NUM_WORDS,
 {
   cout << "Creating up to " << TARGET_NUM_WORDS << " clusters/words..." << endl;
   cout << "... " << endl;
-  cvflann::KMeansIndexParams kmeans(32, 11, cv::flann::FLANN_CENTERS_KMEANSPP);
+  cvflann::KMeansIndexParams kmeans(32, 11, cvflann::FLANN_CENTERS_KMEANSPP);
   cv::Mat centers(TARGET_NUM_WORDS, descriptors.cols, CV_32F);
   typedef cv::flann::L2<float> distance;
   typedef distance::ResultType DistanceType;

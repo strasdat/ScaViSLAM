@@ -35,7 +35,7 @@ using namespace ScaViSLAM;
 
 struct OptParams
 {
-  OptParams(int num_iters=1,
+  OptParams(int num_iters,
             bool use_robust_kernel=false,
             double huber_kernel_width=1)
     : num_iters(num_iters),
@@ -60,7 +60,7 @@ class SlamGraph
 public:
 
   // Typedefs and Enums
-  typedef typename ALIGNED<ImageFeature<ObsDim> >::int_hash_map FeatureTable;
+  //typedef typename ALIGNED<ImageFeature<ObsDim> >::int_hash_map FeatureTable;
 
   struct Vertex
   {
@@ -89,7 +89,7 @@ public:
     //                                    second int: vertex_id
 
     bool fixed;                        // Fix vertex during optimization?
-    FeatureTable  feature_table;
+    typename ImageFeature<ObsDim>::Table  feature_table;
     Pose T_me_from_world;
 
   private: DISALLOW_COPY_AND_ASSIGN(Vertex)
@@ -140,6 +140,8 @@ public:
 
     class EdgeTable;
 
+    enum EdgeType { LOCAL, METRIC, APPREARANCE};
+
     class Edge                           //edge between two pose vertices
     {
       friend class EdgeTable;
@@ -153,7 +155,8 @@ public:
         return is_marginalized_;
       }
 
-      Edge(int id1, int id2) : is_marginalized_(false), error(0)
+      Edge(int id1, int id2, int strength, EdgeType et)
+        : is_marginalized_(false), strength(strength), error(0), edge_type(et)
       {
         assert(id1!=id2);
 
@@ -174,7 +177,10 @@ public:
 
       Pose T_1_from_2;
 
+      int strength;
       double error;
+
+      EdgeType edge_type;
 
       Matrix<double, Pose::DoF, Pose::DoF> Lambda_2_from_1;
       Matrix<double, Pose::DoF, Pose::DoF> Lambda_1_from_2;
@@ -324,7 +330,7 @@ public:
         }
       }
 
-      void insertEdge(int id1, int id2)
+      void insertEdge(int id1, int id2, int strenght, EdgeType edge_type)
       {
         assert(id1!=id2);
         bool inserted;
@@ -332,13 +338,13 @@ public:
         {
           inserted
               = insert(make_pair(make_pair(id1, id2),
-                                 EdgePtr(new Edge(id1, id2)))).second;
+                                 EdgePtr(new Edge(id1, id2, strenght, edge_type)))).second;
         }
         else
         {
           inserted
               = insert(make_pair(make_pair(id2, id1),
-                                 EdgePtr(new Edge(id2, id1)))).second;
+                                 EdgePtr(new Edge(id2, id1, strenght, edge_type)))).second;
         }
         if (inserted==false)
         {
@@ -466,6 +472,11 @@ public:
       return active_point_set_;
     }
 
+    const tr1::unordered_set<int> & outer_point_set() const
+    {
+      return outer_point_set_;
+    }
+
     const VertexTable & vertex_table() const
     {
       return vertex_table_;
@@ -530,7 +541,7 @@ public:
                               Vertex * v_newkey);
     void
     addNewEdges              (const IntTable & neighborid_to_strength,
-                              // bool is_loop_closure_edge,
+                              EdgeType edge_type,
                               Vertex * v_newkey);
     void
     computeStrength          (const list<MyNewTwoViewPointPtr> & newpoint_list,
@@ -606,6 +617,7 @@ public:
     Proj proj_;
     WindowTable double_window_;
     tr1::unordered_set<int> active_point_set_;
+    tr1::unordered_set<int> outer_point_set_;
     VertexTable vertex_table_;
 
     PointTable  point_table_;          // hash table of 3d points

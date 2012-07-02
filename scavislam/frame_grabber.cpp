@@ -154,8 +154,6 @@ processNextFrame()
     {
 
       cv::Mat float_as_4uint = bundle.disp;
-      cerr << float_as_4uint.size().width << " "
-           << float_as_4uint.size().height << endl;
       frame_data.disp = cv::Mat(frame_data.cur_left().uint8.size(),
                                 CV_32F, float_as_4uint.data).clone();
       cerr << frame_data.disp.size().width << " "
@@ -167,7 +165,6 @@ processNextFrame()
 
       //frame_data.right.uint8 = cv::imread(right_sstr.str(),0);
       cv::Mat depth = bundle.depth;
-      cerr << depth.type() << endl;
       depthToDisp(depth, &frame_data.disp);
       frame_data.have_disp_img = true;
     }

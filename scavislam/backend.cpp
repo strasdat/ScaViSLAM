@@ -230,6 +230,7 @@ BackendDrawDataPtr Backend
   BackendDrawDataPtr draw_data(new BackendDrawData);
 
   draw_data->active_point_set = graph_.active_point_set();
+  draw_data->outer_point_set = graph_.outer_point_set();
   draw_data->double_window = graph_.double_window();
   draw_data->point_table = graph_.point_table();
   draw_data->vertex_table = graph_.vertex_table();
@@ -256,6 +257,29 @@ NeighborhoodPtr Backend
 
   addPointsToNeighbors(neighborhood_ptr.get());
   addAnchorPosesToNeighbors(neighborhood_ptr.get());
+
+  int row = 0;
+  for(ALIGNED<FrontendVertex>::int_hash_map::iterator
+      it = neighborhood_ptr->vertex_map.begin();
+      it!=neighborhood_ptr->vertex_map.end(); ++it, ++row)
+  {
+    int id1 = it->first;
+    int col = 0;
+    for(ALIGNED<FrontendVertex>::int_hash_map::iterator
+        it2 = neighborhood_ptr->vertex_map.begin();
+        col<row; ++it2, ++col)
+    {
+      int id2 = it2->first;
+      StereoGraph::StdEdgeTable::const_iterator edge_it
+          = graph_.edge_table().orderd_find(id1, id2);
+      if (edge_it!=graph_.edge_table().end())
+      {
+        int strength = edge_it->second->strength;
+        it->second.strength_to_neighbors.insert(make_pair(strength,id2));
+        it2->second.strength_to_neighbors.insert(make_pair(strength,id1));
+      }
+    }
+  }
 
   return neighborhood_ptr;
 }
@@ -289,15 +313,15 @@ void Backend
     Neighborhood * neighborhood) const
 {
   tr1::unordered_set<int> added_point_set;
-  for (ALIGNED<SE3>::int_hash_map::const_iterator
-       it = neighborhood->T_me_from_w_map.begin();
-       it!=neighborhood->T_me_from_w_map.end(); ++it)
+  for (ALIGNED<FrontendVertex>::int_hash_map::const_iterator
+       it = neighborhood->vertex_map.begin();
+       it!=neighborhood->vertex_map.end(); ++it)
   {
     int pose_id = it->first;
 
     const StereoGraph::Vertex & v = GET_MAP_ELEM(pose_id,
                                                  graph_.vertex_table());
-    for (StereoGraph::FeatureTable::const_iterator
+    for (ImageFeature<3>::Table::const_iterator
          it_feat = v.feature_table.begin(); it_feat!=v.feature_table.end();
          ++it_feat)
     {
@@ -324,20 +348,24 @@ void Backend
 ::addPoseToNeighborhood(int new_pose_id,
                         Neighborhood * neighborhood) const
 {
+  const StereoGraph::Vertex & v = GET_MAP_ELEM(new_pose_id,
+                                               graph_.vertex_table());
+  FrontendVertex vf;
+  vf.feat_map = v.feature_table;
+
   if (graph_.double_window().find(new_pose_id)
       != graph_.double_window().end())
   {
-    const StereoGraph::Vertex & v = GET_MAP_ELEM(new_pose_id,
-                                                 graph_.vertex_table());
-    neighborhood->T_me_from_w_map.insert(
-          make_pair(new_pose_id, v.T_me_from_world));
+    vf.T_me_from_w = v.T_me_from_world;
   }
   else
   {
-
-    neighborhood->T_me_from_w_map.insert(
-          make_pair(new_pose_id, graph_.computeAbsolutePose(new_pose_id)));
+    vf.T_me_from_w = graph_.computeAbsolutePose(new_pose_id);
   }
+  neighborhood->vertex_map.insert(
+        make_pair(new_pose_id, vf));
+//  neighborhood->feat_map
+//      .insert(make_pair(new_pose_id, v.feature_table));
 }
 
 void Backend
@@ -349,11 +377,12 @@ void Backend
   {
     const CandidatePoint3Ptr & ap = *it;
     int new_pose_id = ap->anchor_id;
-    if (IS_IN_SET(new_pose_id,neighborhood->T_me_from_w_map))
+    if (IS_IN_SET(new_pose_id,neighborhood->vertex_map))
       continue;
 
     addPoseToNeighborhood(new_pose_id, neighborhood);
   }
+
 }
 
 
@@ -446,7 +475,7 @@ void Backend
                       larger_neighborhood,
                       const tr1::unordered_set<int> & direct_neighbors,
                       list< CandidatePoint3Ptr > * candidate_point_list,
-                      ALIGNED<SE3>::int_hash_map * T_me_from_w_table)
+                      ALIGNED<FrontendVertex>::int_hash_map * vertex_table)
 {
   tr1::unordered_set<int> point_set;
   for (tr1::unordered_set<int>::const_iterator it
@@ -458,7 +487,7 @@ void Backend
 
     const StereoGraph::Vertex & v
         = GET_MAP_ELEM(keyframe_id, graph_.vertex_table());
-    for (StereoGraph::FeatureTable::const_iterator feat_it
+    for (ImageFeature<3>::Table::const_iterator feat_it
          = v.feature_table.begin(); feat_it!=v.feature_table.end(); ++feat_it)
     {
       int point_id = feat_it->first;
@@ -505,11 +534,12 @@ void Backend
                                     p.anchor_obs_pyr,
                                     p.anchor_level,
                                     p.normal_anchor)));
-      if (IS_IN_SET(p.anchorframe_id, *T_me_from_w_table) == false)
+      if (IS_IN_SET(p.anchorframe_id, *vertex_table) == false)
       {
+        FrontendVertex vf;
+        vf.T_me_from_w = v_anchor.T_me_from_world;
 
-        T_me_from_w_table->insert(make_pair(p.anchorframe_id,
-                                            v_anchor.T_me_from_world));
+        vertex_table->insert(make_pair(p.anchorframe_id, vf));
       }
     }
   }
@@ -534,13 +564,15 @@ bool Backend
   assert(root_frame.cell_grid2d.size()>0);
   const StereoGraph::Vertex & v_root
       = GET_MAP_ELEM(rootframe_id, graph_.vertex_table());
-  ALIGNED<SE3>::int_hash_map T_me_from_w_table;
+  ALIGNED<FrontendVertex>::int_hash_map vertex_table;
   list<CandidatePoint3Ptr> candidate_point_list;
-  T_me_from_w_table.insert(make_pair(rootframe_id, v_root.T_me_from_world));
+  FrontendVertex vf;
+  vf.T_me_from_w = v_root.T_me_from_world;
+  vertex_table.insert(make_pair(rootframe_id, vf));
 
   pointsVisibleInRoot(v_root.T_me_from_world, larger_neighborhood,
                       direct_neighbors,
-                      &candidate_point_list, &T_me_from_w_table);
+                      &candidate_point_list, &vertex_table);
 
   if (candidate_point_list.size()<COVIS_THR)
     return false;
@@ -548,7 +580,7 @@ bool Backend
   TrackData<3> track_data;
   SE3 T_newroot_from_oldroot;
 
-  if (matchAndAlign(root_frame, rootframe_id, T_me_from_w_table,
+  if (matchAndAlign(root_frame, rootframe_id, vertex_table,
                     candidate_point_list,
                     &T_newroot_from_oldroot, &track_data) == false)
     return false;
@@ -557,7 +589,7 @@ bool Backend
   list<StereoGraph::MyTrackPointPtr> trackpoint_list;
   IntTable neighborid_to_strength;
 
-  keyframesToRegister(rootframe_id, direct_neighbors, T_me_from_w_table,
+  keyframesToRegister(rootframe_id, direct_neighbors, vertex_table,
                       T_newroot_from_oldroot, track_data,
                       &frameid_to_pointlist, &trackpoint_list,
                       &neighborid_to_strength);
@@ -583,7 +615,7 @@ bool Backend
 void Backend
 ::keyframesToRegister(int rootframe_id,
                       const tr1::unordered_set<int> & direct_neighbors,
-                      const ALIGNED<SE3>::int_hash_map & T_me_from_w_table,
+                      const ALIGNED<FrontendVertex>::int_hash_map & vertex_table,
                       const SE3 & T_newroot_from_oldroot,
                       const TrackData<3> & track_data,
                       ImageStatsTable * frameid_to_pointlist,
@@ -615,8 +647,8 @@ void Backend
     {
       int global_point_id = point_ptr->point_id;
 
-      for (ALIGNED<SE3>::int_hash_map::const_iterator it_poses
-           = T_me_from_w_table.begin(); it_poses!=T_me_from_w_table.end();
+      for (ALIGNED<FrontendVertex>::int_hash_map::const_iterator it_poses
+           = vertex_table.begin(); it_poses!=vertex_table.end();
            ++it_poses)
       {
         int pose_id = it_poses->first;
@@ -684,7 +716,7 @@ void Backend
       trackpoint_list->insert(trackpoint_list->begin(),
                               pointlist_for_neighbor.begin(),
                               pointlist_for_neighbor.end());
-      new_edges_.insertEdge(rootframe_id, neighbor_id);
+      new_edges_.insertEdge(rootframe_id, neighbor_id, strength, StereoGraph::METRIC);
     }
   }
 }
@@ -693,7 +725,7 @@ void Backend
 bool Backend
 ::matchAndAlign(const Frame & root_frame,
                 int rootframe_id,
-                const ALIGNED<SE3>::int_hash_map & T_me_from_w_table,
+                const ALIGNED<FrontendVertex>::int_hash_map & vertex_table,
                 const list<CandidatePoint3Ptr> & candidate_point_list,
                 SE3 * T_newroot_from_oldroot,
                 TrackData<3> * track_data)
@@ -709,7 +741,7 @@ bool Backend
                                      feature_tree,
                                      cam_vec_,
                                      rootframe_id,
-                                     T_me_from_w_table,
+                                     vertex_table,
                                      candidate_point_list,
                                      10,
                                      22,
@@ -734,7 +766,7 @@ bool Backend
                                      feature_tree,
                                      cam_vec_,
                                      rootframe_id,
-                                     T_me_from_w_table,
+                                     vertex_table,
                                      candidate_point_list,
                                      4,
                                      22,
@@ -813,11 +845,12 @@ bool Backend
       = loop.T_query_from_loop.inverse()*v_query.T_me_from_world;
 
   list< CandidatePoint3Ptr > candidate_point_list;
-  ALIGNED<SE3>::int_hash_map T_me_from_w_table;
-  T_me_from_w_table.insert(make_pair(loop.loop_keyframe_id,
-                                     T_loop_from_world));
+  ALIGNED<FrontendVertex>::int_hash_map vertex_table;
+  FrontendVertex vf;
+  vf.T_me_from_w = T_loop_from_world;
+  vertex_table.insert(make_pair(loop.loop_keyframe_id,vf));
 
-  for (StereoGraph::FeatureTable::const_iterator it
+  for (ImageFeature<3>::Table::const_iterator it
        = v_query.feature_table.begin(); it!=v_query.feature_table.end(); ++it)
   {
     int point_id = it->first;
@@ -851,11 +884,11 @@ bool Backend
                                                            p.anchor_obs_pyr,
                                                            p.anchor_level,
                                                            p.normal_anchor)));
-    if (IS_IN_SET(p.anchorframe_id, T_me_from_w_table) == false)
+    if (IS_IN_SET(p.anchorframe_id, vertex_table) == false)
     {
-
-      T_me_from_w_table.insert(make_pair(p.anchorframe_id,
-                                         v_anchor.T_me_from_world));
+      FrontendVertex vf;
+      vf.T_me_from_w = v_anchor.T_me_from_world;
+      vertex_table.insert(make_pair(p.anchorframe_id, vf));
     }
   }
 
@@ -863,7 +896,7 @@ bool Backend
   TrackData<3> track_data;
 
   SE3 T_newloop_from_oldloop;
-  if (matchAndAlign(loop_frame, loop.loop_keyframe_id, T_me_from_w_table,
+  if (matchAndAlign(loop_frame, loop.loop_keyframe_id, vertex_table,
                     candidate_point_list,
                     &T_newloop_from_oldloop, &track_data) == false)
     return false;

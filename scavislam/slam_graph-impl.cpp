@@ -116,6 +116,7 @@ void SlamGraph<SE3,StereoCamera, SE3XYZ_STEREO, 3>
   e->setMeasurement( T_2_from_1);
   e->information() = Lambda_2_from_1;
 
+
   optimizer->addEdge(e);
 }
 

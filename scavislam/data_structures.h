@@ -52,6 +52,7 @@ public:
       anchor_obs_pyr(anchor_obs_pyr),
       anchor_level(anchor_level),
       normal_anchor(normal_anchor)
+
   {
   }
 
@@ -84,8 +85,12 @@ struct ImageFeature
   Matrix<double,Dim,1> center;
   int level;
 
+  typedef typename ALIGNED<ImageFeature<Dim> >::int_hash_map Table;
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
+
+
 
 template <int Dim>
 class TrackPoint
@@ -165,12 +170,17 @@ struct AddToOptimzer
 };
 typedef tr1::shared_ptr<AddToOptimzer> AddToOptimzerPtr;
 
+struct FrontendVertex
+{
+  SE3 T_me_from_w;
+  multimap<int,int> strength_to_neighbors;
+  ImageFeature<3>::Table feat_map;
+};
 
 struct Neighborhood
 {
-  list<CandidatePoint3Ptr > point_list;
-  ALIGNED<SE3>::int_hash_map T_me_from_w_map;
-
+  list<CandidatePoint3Ptr> point_list;
+  ALIGNED<FrontendVertex>::int_hash_map vertex_map;
 };
 
 typedef tr1::shared_ptr<Neighborhood> NeighborhoodPtr;

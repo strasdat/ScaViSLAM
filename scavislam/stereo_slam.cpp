@@ -224,11 +224,12 @@ void draw(int loop_id,
   GLUquadric * quad = gluNewQuadric();
   SE3 T_actkey_from_world;
   if (IS_IN_SET(modules->frontend->actkey_id,
-                modules->frontend->neighborhood()->T_me_from_w_map))
+                modules->frontend->neighborhood()->vertex_map))
   {
     T_actkey_from_world
         = GET_MAP_ELEM(modules->frontend->actkey_id,
-                       modules->frontend->neighborhood()->T_me_from_w_map);
+                       modules->frontend->neighborhood()->vertex_map)
+        .T_me_from_w;
   }
   static pangolin::Var<bool>
       ui_show_new_points("ui.show_new_points",true);
@@ -376,6 +377,8 @@ void draw(int loop_id,
     {
       glColor3f(0,1,0);
       Draw2d::points(modules->frontend->draw_data().new_points2d.at(level),2);
+      glColor3f(0,0,1);
+      Draw2d::points(modules->frontend->draw_data().fast_points2d.at(level),5);
     }
 
     if (level==0)
@@ -445,8 +448,10 @@ void draw(int loop_id,
       GET_MAP_ELEM((pangolin::OpenGlStack)(GL_MODELVIEW),
                    views->pangolin_cam.stacks);
   Map<Matrix<double,4,4,ColMajor> > Map_gl_modelview(&gl_modelview.m[0]);
+
   Map_gl_modelview
       = Map_gl_modelview*T_cur_from_world.matrix();
+
   pangolin::OpenGlRenderState r_state;
   r_state.Set(gl_projection);
   r_state.Set(gl_modelview);
@@ -454,13 +459,13 @@ void draw(int loop_id,
   glClearColor(1,1,1,0);
   glEnable(GL_DEPTH_TEST);
   glColor3f(0,0,0);
-  Draw3d::pose(SE3());
   glColor3f(0.75,0,0);
   if (ui_show_neighborhood)
   {
     glColor4f(1,0,0,0.5);
+
     vector<GlPoint3f> points;
-    for (ALIGNED<CandidatePoint3Ptr >::list::const_iterator
+    for (list<CandidatePoint3Ptr>::const_iterator
          it=modules->frontend->neighborhood()->point_list.begin();
          it!=modules->frontend->neighborhood()->point_list.end(); ++it)
     {
@@ -468,15 +473,26 @@ void draw(int loop_id,
       points.push_back(
             GlPoint3f(GET_MAP_ELEM(ap->anchor_id,
                                    modules->frontend->neighborhood()
-                                   ->T_me_from_w_map).inverse()
+                                   ->vertex_map).T_me_from_w.inverse()
                       *ap->xyz_anchor));
     }
     Draw3d::points(points,2);
-    for (ALIGNED<SE3  >::int_hash_map::const_iterator
-         it=modules->frontend->neighborhood()->T_me_from_w_map.begin();
-         it!=modules->frontend->neighborhood()->T_me_from_w_map.end(); ++it)
+    for (ALIGNED<FrontendVertex>::int_hash_map::const_iterator
+         it=modules->frontend->neighborhood()->vertex_map.begin();
+         it!=modules->frontend->neighborhood()->vertex_map.end(); ++it)
     {
-      Draw3d::pose(it->second.inverse());
+      SE3 T1 = it->second.T_me_from_w.inverse();
+      Draw3d::pose(T1);
+
+      for (multimap<int,int>::const_iterator it2 =
+           it->second.strength_to_neighbors.begin();
+           it2 != it->second.strength_to_neighbors.end(); ++it2)
+      {
+        SE3 T2 = GET_MAP_ELEM(it2->second,
+                              modules->frontend->neighborhood()->vertex_map)
+            .T_me_from_w.inverse();
+        Draw3d::line(T1.translation(), T2.translation());
+      }
     }
   }
   glColor3f(0.75,0,0);
@@ -486,7 +502,7 @@ void draw(int loop_id,
          =  graph_draw_data->new_edges.begin();
          it!= graph_draw_data->new_edges.end(); ++it)
     {
-      glColor4f(0.0,0.75,0.,0.5);
+      glColor4f(0.75,0,0.,0.5);
       const StereoGraph::EdgePtr & e = it->second;
       int id1 = e->vertex_id1;
       int id2 = e->vertex_id2;
@@ -516,6 +532,7 @@ void draw(int loop_id,
       {
         glColor4f(0,0,1.,0.75);
       }
+
       int id1 = e->vertex_id1;
       int id2 = e->vertex_id2;
 
@@ -556,9 +573,7 @@ void draw(int loop_id,
       Draw3d::points(modules->frontend->draw_data().tracked_points3d.at(l),
                      zeroFromPyr_d(2.,l));
     }
-    Draw3d::pose((modules->frontend->T_cur_from_actkey() *
-                  T_actkey_from_world
-                  ).inverse(),0.25);
+
   }
   if (ui_show_newtracked_points)
   {
@@ -584,10 +599,19 @@ void draw(int loop_id,
     Draw3d::pose(
           T_actkey_from_world.inverse());
   }
+  glColor3f(0,0,1);
+  SE3 T_world_from_cur = (modules->frontend->T_cur_from_actkey() *
+                          T_actkey_from_world
+                          ).inverse();
+  Draw3d::pose(T_world_from_cur,0.25);
+  Draw3d::line(T_world_from_cur.translation(),
+               T_actkey_from_world.inverse().translation());
+
   if (ui_show_optimized_points)
   {
     vector<vector<GlPoint3f> > glpoint_vec(NUM_PYR_LEVELS);
-    glColor3f(0.5,0,0);
+
+
     for (tr1::unordered_set<int>::iterator
          it = graph_draw_data->active_point_set.begin();
          it!=graph_draw_data->active_point_set.end();++it)
@@ -671,8 +695,8 @@ int main(int argc, const char* argv[])
 
       if (modules.backend->monitor.getNeighborhood(&neighborhood))
       {
-        if (neighborhood->T_me_from_w_map.find(modules.frontend->actkey_id)
-            != neighborhood->T_me_from_w_map.end())
+        if (neighborhood->vertex_map.find(modules.frontend->actkey_id)
+            != neighborhood->vertex_map.end())
         {
           modules.frontend->neighborhood() = neighborhood;
           updated = true;

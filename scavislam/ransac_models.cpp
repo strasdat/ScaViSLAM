@@ -164,7 +164,7 @@ void SE3Model
                                                         c0,
                                                         c1);
   se3.translation() = c0-R*c1;
-  se3.set_rotation_matrix(R);
+  se3.setRotationMatrix(R);
 
 }
 

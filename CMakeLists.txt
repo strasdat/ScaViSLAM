@@ -65,6 +65,8 @@ SET (INCLUDE_DIRS "EXTERNAL/eigen3.1/"
                   "EXTERNAL/opencv2/modules/features2d/include"
                   "EXTERNAL/opencv2/modules/flann/include"
                   "EXTERNAL/opencv2/modules/objdetect/include"
+                  "EXTERNAL/opencv2/modules/photo/include"
+                  "EXTERNAL/opencv2/modules/nonfree/include"
                   "EXTERNAL/opencv2/modules/calib3d/include"
                   "EXTERNAL/opencv2/modules/ml/include"
                   "EXTERNAL/opencv2/modules/highgui/include"
@@ -88,6 +90,7 @@ SET (LIB_NAMES GL pangolin glut g2o_stuff g2o_core g2o_solver_csparse
                VisionTools Sophus 
                boost_system boost_thread boost_filesystem boost_regex
                opencv_core opencv_features2d opencv_flann opencv_gpu
+               opencv_nonfree
                opencv_highgui opencv_imgproc opencv_calib3d)
 
 IF(CUDA_SUPPORT)

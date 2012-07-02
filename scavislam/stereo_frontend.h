@@ -122,6 +122,7 @@ public:
 
   stack<AddToOptimzerPtr> to_optimizer_stack;
   tr1::unordered_map<int,Frame>  keyframe_map;
+  tr1::unordered_map<int,list<CandidatePoint3Ptr > >  newpoint_map;
   vector<int>  keyframe_num2id;
   IntTable keyframe_id2num;
   int actkey_id;
@@ -178,6 +179,14 @@ private:
   bool
   shallWeDropNewKeyframe     (const PointStatistics & point_stats);
 
+  bool
+  shallWeSwitchKeyframe      (const list<TrackPoint3Ptr> & trackpoint_list,
+                              int * other_id,
+                              SE3 * T_cur_from_other,
+                              ALIGNED<QuadTree<int> >::vector
+                              * other_point_tree,
+                              PointStatistics * other_stat);
+
   void
   addNewKeyframe             (const ALIGNED<QuadTree<int> >::vector &
                               feature_tree,
@@ -213,6 +222,9 @@ private:
                               ALIGNED<QuadTree<int> >::vector * feature_tree,
                               vector<CellGrid2d> * cell_grid_2d);
   void
+  recomputeFastCorners       (const Frame & frame,
+                              ALIGNED<QuadTree<int> >::vector * feature_tree);
+  void
   addNewPoints               (int new_keyframe_id,
                               const ALIGNED<QuadTree<int> >::vector &
                               feature_tree);
@@ -221,6 +233,16 @@ private:
                               const ALIGNED<QuadTree<int> >::vector &
                               feature_tree,
                               const Matrix3i & add_flags,
+                              ALIGNED<QuadTree<int> >::vector * new_qt,
+                              vector<int> * num_points);
+
+  void
+  addMorePointsToOtherFrame  (int new_keyframe_id,
+                              const SE3 & T_newkey_from_cur,
+                              const ALIGNED<QuadTree<int> >::vector &
+                              feature_tree,
+                              const Matrix3i & add_flags,
+                              const cv::Mat & disp,
                               ALIGNED<QuadTree<int> >::vector * new_qt,
                               vector<int> * num_points);
   int
@@ -233,7 +255,6 @@ private:
 
   NeighborhoodPtr neighborhood_;
   SE3 T_cur_from_actkey_;
-  list<CandidatePoint3Ptr > new_point_list_ringbuffer_;
 
   vector<FastGrid> fast_grid_;
   SE3XYZ_STEREO se3xyz_stereo_;
@@ -244,6 +265,8 @@ private:
   Params params_;
   StereoFrontendDrawData draw_data_;
   DenseTracker tracker_;
+
+  double av_track_length_;
 
 private:
   DISALLOW_COPY_AND_ASSIGN(StereoFrontend)

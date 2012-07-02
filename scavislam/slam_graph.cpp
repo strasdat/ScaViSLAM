@@ -168,14 +168,12 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
       = GET_MAP_ELEM_REF(oldkey_id, &neighborid_to_strength);
 
   //Make sure the strength between oldkey and newkey is strong enough
-  // TODO: THIS  SHOULD BE CHECKED INSIDE OF THE FRONTENDF
-  //assert(strength_to_oldkey>=covis_thr_*0.5);
-  if (strength_to_oldkey<covis_thr_)
+  // TODO: THIS  SHOULD BE CHECKED INSIDE OF THE FRONTEND
+    if (strength_to_oldkey<covis_thr_)
   {
     strength_to_oldkey = covis_thr_;
   }
 
-  // TODO: Check: Shall we add points to keyframes we won't add an edge to?
   addNewPointsToMap(newpoint_list, neighborid_to_strength, v_newkey.get());
 
   addNewObsToOldPoints(trackpoint_list, v_newkey.get());
@@ -184,7 +182,7 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
       vertex_table_.insert(make_pair(v_newkey->own_id, v_newkey)).second;
   assert(inserted);
 
-  addNewEdges(neighborid_to_strength,  v_newkey.get());
+  addNewEdges(neighborid_to_strength, LOCAL, v_newkey.get());
 }
 
 template <typename Pose, typename Cam, typename Proj, int ObsDim>
@@ -200,7 +198,7 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
   v_root.T_me_from_world = T_newroot_from_w;
 
   addNewObsToOldPoints(trackpoint_list, &v_root);
-  addNewEdges(neighborid_to_strength, &v_root);
+  addNewEdges(neighborid_to_strength, METRIC, &v_root);
 
   //restore old pose
   v_root.T_me_from_world = T_rootold_from_world;
@@ -226,7 +224,7 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
   v_root.neighbor_ids_ordered_by_strength.insert(
         make_pair(strength, loop_id));
 
-  edge_table_.insertEdge(root_id, loop_id);
+  edge_table_.insertEdge(root_id, loop_id, strength, APPREARANCE);
 
 
   Matrix<double, Pose::DoF, Pose::DoF> Lambda;
@@ -294,6 +292,7 @@ bool SlamGraph<Frame,Cam,Proj,ObsDim>
   WindowTable old_window = double_window_;
   double_window_.clear();
   active_point_set_.clear();
+  outer_point_set_.clear();
 
   computeInitialDoubleWin(root_id, inner_window_size_, double_window_size_);
   computeActivePointsAndExtendOuterWindow();
@@ -329,81 +328,23 @@ void SlamGraph<Frame,Cam,Proj,ObsDim>
                                 cam_.baseline());
   g2o_cam->setId(0);
 
-  //cerr << "VOR" << optimizer.numParameters() << endl;
+
   setupG2o(g2o_cam, &optimizer);
-  //cerr << "AFTERs" << optimizer.numParameters() << endl;
 
   copyDataToG2o(opt_params, &optimizer);
 
-//  for (g2o::HyperGraph::EdgeSet::const_iterator it = optimizer.edges().begin();
-//       it!=optimizer.edges().end(); ++it)
-//  {
-//    G2oEdgeProjectPSI2UVU * e = dynamic_cast<G2oEdgeProjectPSI2UVU *>(*it);
-//    if (e!=NULL)
-//    {
-//      assert(e->vertices().size()==3);
-//      for (int i=0; i<3; ++i)
-//      {
-//        g2o::OptimizableGraph::Vertex* from
-//            = static_cast<g2o::OptimizableGraph::Vertex*>(e->vertices().at(i));
-//        assert(from!=NULL);
-
-//        int ii = from->id();
-//        int aa = ii;
-//        aa = aa;
-
-
-//        int fromDim = from->dimension();
-//        if (i==0)
-//          assert(fromDim==3);
-//        else
-//          assert(fromDim==6);
-//      }
-//    }
-//  }
-
   optimizer.initializeOptimization();
 
-//  for (g2o::HyperGraph::EdgeSet::const_iterator it = optimizer.edges().begin();
-//       it!=optimizer.edges().end(); ++it)
-//  {
-//    G2oEdgeProjectPSI2UVU * e = dynamic_cast<G2oEdgeProjectPSI2UVU *>(*it);
-//    if (e!=NULL)
-//    {
-//      assert(e->vertices().size()==3);
-//      for (int i=0; i<3; ++i)
-//      {
-//        g2o::OptimizableGraph::Vertex* from
-//            = static_cast<g2o::OptimizableGraph::Vertex*>(e->vertices().at(i));
-//        assert(from!=NULL);
-
-//        int ii = from->id();
-//        int aa = ii;
-//        aa = aa;
-
-//        int fromDim = from->dimension();
-//        if (i==0)
-//          assert(fromDim==3);
-//        else
-//          assert(fromDim==6);
-//      }
-//    }
-//  }
-
-  double static lambda = -1;
+  double static lambda = 50.;
   g2o::OptimizationAlgorithmLevenberg * lm
       = static_cast<g2o::OptimizationAlgorithmLevenberg *>(optimizer.solver());
 
-  if (lambda>-1)
-  {
-    lm->setUserLambdaInit(min(1000000000., max(EPS,lambda)));
-  }
+  lm->setUserLambdaInit(lambda);
 
   StopWatch sw;
   sw.start();
   optimizer.optimize(opt_params.num_iters);
   sw.stop();
-  lambda = lm->currentLambda();
 
   if (stats!=NULL)
   {
@@ -482,7 +423,7 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
 template <typename Pose, typename Cam, typename Proj, int ObsDim>
 void SlamGraph<Pose,Cam,Proj,ObsDim>
 ::addNewEdges(const IntTable & neighborid_to_strength,
-              //  bool is_loop_closure_edge,
+              EdgeType edge_type,
               Vertex * v_newkey)
 {
   for (IntTable::const_iterator
@@ -503,7 +444,7 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
       v_newkey->neighbor_ids_ordered_by_strength.insert(
             make_pair(strength,other_id));
 
-      edge_table_.insertEdge(other_id, v_newkey->own_id);
+      edge_table_.insertEdge(other_id, v_newkey->own_id, strength, edge_type);
 
       Pose T_other_from_new;
       Matrix<double, Pose::DoF, Pose::DoF> Lambda;
@@ -592,10 +533,10 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
          it!=neighborid_to_strength->end(); ++it)
     {
       int frame_id = it->first;
-      if (it->second<covis_thr())
-        continue;
-      if (IS_IN_SET(frame_id, recent_keyframe))
-        continue;
+//      if (it->second<covis_thr())
+//        continue;
+//      if (IS_IN_SET(frame_id, recent_keyframe))
+//        continue;
       if (IS_IN_SET(frame_id, num_top)
           && GET_MAP_ELEM(frame_id, num_top)>=covis_thr_/2
           && IS_IN_SET(frame_id, num_bottom)
@@ -672,7 +613,7 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
       const Vertex & frame_in_inner_window
           = GET_MAP_ELEM(frame_id, vertex_table_);
 
-      for (typename FeatureTable::const_iterator
+      for (typename ImageFeature<ObsDim>::Table::const_iterator
            obs_it = frame_in_inner_window.feature_table.begin();
            obs_it!=frame_in_inner_window.feature_table.end(); ++obs_it)
       {
@@ -702,6 +643,19 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
             }
           }
         }
+      }
+    }
+    else
+    {
+      const Vertex & frame_in_outer_window
+          = GET_MAP_ELEM(frame_id, vertex_table_);
+
+      for (typename ImageFeature<ObsDim>::Table::const_iterator
+           obs_it = frame_in_outer_window.feature_table.begin();
+           obs_it!=frame_in_outer_window.feature_table.end(); ++obs_it)
+      {
+        int point_id = obs_it->first;
+        outer_point_set_.insert(point_id);
       }
     }
   }
@@ -840,7 +794,8 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
 
   multiset<double> depth_set;
 
-  for (typename FeatureTable::const_iterator it = v1.feature_table.begin();
+  for (typename ImageFeature<ObsDim>::Table::const_iterator it
+       = v1.feature_table.begin();
        it!=v1.feature_table.end();++it)
   {
     int point_id = it->first;

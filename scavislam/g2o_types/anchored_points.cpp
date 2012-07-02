@@ -120,28 +120,28 @@ bool G2oEdgeProjectPSI2UVU
         }
     }
   }
-      return true;
+  return true;
 }
 
 bool G2oEdgeProjectPSI2UVU
 ::read(std::istream& is)
 {
   assert(false);
-//  for (int i=0; i<3; i++)
-//  {
-//    is  >> measurement()[i];
-//  }
-//  inverseMeasurement()[0] = -measurement()[0];
-//  inverseMeasurement()[1] = -measurement()[1];
-//  inverseMeasurement()[2] = -measurement()[2];
+  //  for (int i=0; i<3; i++)
+  //  {
+  //    is  >> measurement()[i];
+  //  }
+  //  inverseMeasurement()[0] = -measurement()[0];
+  //  inverseMeasurement()[1] = -measurement()[1];
+  //  inverseMeasurement()[2] = -measurement()[2];
 
-//  for (int i=0; i<3; i++)
-//    for (int j=i; j<3; j++)
-//    {
-//      is >> information()(i,j);
-//      if (i!=j)
-//        information()(j,i)=information()(i,j);
-//    }
+  //  for (int i=0; i<3; i++)
+  //    for (int j=i; j<3; j++)
+  //    {
+  //      is >> information()(i,j);
+  //      if (i!=j)
+  //        information()(j,i)=information()(i,j);
+  //    }
   return true;
 }
 
@@ -160,9 +160,9 @@ void G2oEdgeProjectPSI2UVU
 
   Vector3d obs(_measurement);
   _error = obs - cam->stereocam_uvu_map(
-             T_p_from_world->estimate()
-             *T_anchor_from_world->estimate().inverse()
-             *invert_depth(psi->estimate()));
+        T_p_from_world->estimate()
+        *T_anchor_from_world->estimate().inverse()
+        *invert_depth(psi->estimate()));
 }
 
 void G2oEdgeProjectPSI2UVU::linearizeOplus()
@@ -204,31 +204,34 @@ bool G2oEdgeSE3
   return true;
 }
 
+Matrix6d third(const SE3 & A, const Vector6d & d)
+{
+  const Matrix6d & AdjA = A.Adj();
+
+  Matrix6d d_lie = SE3::d_lieBracketab_by_d_a(d);
+  //cerr << d_lie << endl;
+  return AdjA + 0.5*d_lie*AdjA + (1./12.)*d_lie*d_lie*AdjA;
+}
+
+
 void G2oEdgeSE3
 ::computeError()
 {
   const G2oVertexSE3 * v1 = static_cast<const G2oVertexSE3 *>(_vertices[0]);
   const G2oVertexSE3 * v2 = static_cast<const G2oVertexSE3 *>(_vertices[1]);
-  SE3 C(_measurement);
-  SE3 error_= v2->estimate().inverse()*C*v1->estimate();
-  _error = error_.log();
+  SE3 T_21(_measurement);
+  _error = (T_21*v1->estimate()*v2->estimate().inverse()).log();
 }
 
 void G2oEdgeSE3::
 linearizeOplus()
 {
-  G2oVertexSE3 * vi = static_cast<G2oVertexSE3 *>(_vertices[0]);
-  SE3 Ti(vi->estimate());
-  G2oVertexSE3 * vj = static_cast<G2oVertexSE3 *>(_vertices[1]);
-  SE3 Tj(vj->estimate());
-  const SE3 & Tij = _measurement;
-  SE3 invTij = Tij.inverse();
-  SE3 invTj_Tij = Tj.inverse()*Tij;
-  SE3 infTi_invTij = Ti.inverse()*invTij;
+  const SE3 & T_21 = _measurement;
+  SE3 I;
+  const Vector6d & d = _error;
+  _jacobianOplusXi = third(T_21, d);
+  _jacobianOplusXj = -third(I, -d);
 
-  //TODO: this is only a rough first order approximation!!
-  _jacobianOplusXi = invTj_Tij.Adj();
-  _jacobianOplusXj = -infTi_invTij.Adj();
 }
 
 #ifdef MONO
@@ -285,9 +288,9 @@ computeError()
 
   Vector2d obs(_measurement);
   _error = obs-T_p_from_world->cam_map(
-             T_p_from_world->estimate()
-             *T_anchor_from_world->estimate().inverse()
-             *invert_depth(psi->estimate()));
+        T_p_from_world->estimate()
+        *T_anchor_from_world->estimate().inverse()
+        *invert_depth(psi->estimate()));
 }
 
 bool G2oEdgeSim3ProjectUVQ

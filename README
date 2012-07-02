@@ -53,27 +53,7 @@ wget -nH --cut-dirs=4 -r -l2 --no-parent -A "*.pnm" http://pub1.willowgarage.com
 Before we start with the installation, we need to perform some preparations.
 ScaViSLAM comes with GPU support. Indeed, GPU support is the default option.
 (Each GPU method has a CPU equivalent. However those are not tested very much).
-Thus, there is an optional dependency on CUDA 4.0 or higher.
-
-First, find out your compiler version by typing "g++ -v".
-There are three options:
-
- Version 4.4: Everything is fine. Version 4.5 or higher:
-  CUDA requires gcc 4.4. If you want to use CUDA and you have not 
-  done it yet, proceed with the following steps:
-   1. <<
-        sudo apt-get install gcc-4.4 g++-4.4 
-      >>
-   2. >>
-        sudo mkdir /usr/local/bin/gnuc4.4
-        sudo ln -s /usr/bin/gcc-4.4 /usr/local/bin/gnuc4.4/gcc
-        sudo ln -s /usr/bin/g++-4.4 /usr/local/bin/gnuc4.4/g++
-        sudo ln -s /usr/bin/c++-4.4 /usr/local/bin/gnuc4.4/c++
-      <<
-   3. Then, add the line "compiler-bindir=/usr/local/bin/gnuc4.4" to
-      "/usr/local/cuda/bin/nvcc.profile".
-  (Description how to install CUDA 4.0 on a newer version of Ubuntu:
-   http://hdfpga.blogspot.com/2011/05/install-cuda-40-on-ubuntu-1104.html)
+Thus, there is an optional dependency on CUDA 4.1 or higher.
 
 Next, install dependencies:
 
@@ -110,12 +90,13 @@ version conflicts (e.g. different OpenCV version which might be installed
 system-wide). Please follow the guide step by step and only deviate form 
 it if you really know what you are doing ;-)
 
-Download Eigen (version 3.1-alpha) in folder EXTERNAL
+Download Eigen (version 3.1) in folder EXTERNAL
 
 >>
-wget http://bitbucket.org/eigen/eigen/get/3.1.0-alpha1.tar.bz2
-tar xvf 3.1.0-alpha1.tar.bz2
-mv eigen-eigen-a810d5dbab47/ eigen3.1
+wget http://bitbucket.org/eigen/eigen/get/3.1.0.tar.gz
+
+tar xvf 3.1.0.tar.gz
+mv eigen-eigen-ca142d0540d3 eigen3.1
 <<
 
 Check out and install g2o (fork with slightly modified cmake file):

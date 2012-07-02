@@ -282,11 +282,24 @@ public:
         {
           //Do DFS to find 1 entry!
           stack<const QuadTreeNode<T>* > dfs_stack;
-          typename QuadTreeNode<T>::Children * initial_ch
+          const typename QuadTreeNode<T>::Children * initial_ch
               = n->children_;
-          typename QuadTreeNode<T>::Children * ch
-              = initial_ch;
-          add_permuted_children(ch, dfs_stack);
+          int cur_level= level+1;
+
+          typename map<int,vector<const QuadTreeNode<T>* >  >
+              ::iterator qu_it
+              = node_queue.find(cur_level);
+          if (qu_it==node_queue.end())
+          {
+            vector<const QuadTreeNode<T>* >  new_vec;
+            qu_it = node_queue.insert(make_pair(cur_level,
+                                                new_vec)).first;
+          }
+          qu_it->second.push_back(initial_ch->xy);
+          qu_it->second.push_back(initial_ch->xY);
+          qu_it->second.push_back(initial_ch->Xy);
+          qu_it->second.push_back(initial_ch->XY);
+          add_permuted_children(initial_ch, dfs_stack);
           while(dfs_stack.size()>0)
           {
             const QuadTreeNode<T> * n = dfs_stack.top();
@@ -297,24 +310,9 @@ public:
               {
                 ptr = &(n->elem);
                 visited.insert(n->unique_id());
-                typename QuadTreeNode<T>::Children * ch
-                    = initial_ch;
 
-                int cur_level= level+1;
 
-                typename map<int,vector<const QuadTreeNode<T>* >  >
-                    ::iterator qu_it
-                    = node_queue.find(cur_level);
-                if (qu_it==node_queue.end())
-                {
-                  vector<const QuadTreeNode<T>* >  new_vec;
-                  qu_it = node_queue.insert(make_pair(cur_level,
-                                                      new_vec)).first;
-                }
-                qu_it->second.push_back(ch->xy);
-                qu_it->second.push_back(ch->xY);
-                qu_it->second.push_back(ch->Xy);
-                qu_it->second.push_back(ch->XY);
+
                 return *this;
               }
             }
@@ -323,21 +321,6 @@ public:
               add_permuted_children(n->children_, dfs_stack);
             }
           }
-          ch = initial_ch;
-          int cur_level= level+1;
-          typename map<int,vector<const QuadTreeNode<T>* >  >
-              ::iterator qu_it
-              = node_queue.find(cur_level);
-          if (qu_it==node_queue.end())
-          {
-            vector<const QuadTreeNode<T>* >  new_vec;
-            qu_it
-                = node_queue.insert(make_pair(cur_level,new_vec)).first;
-          }
-          qu_it->second.push_back(ch->xy);
-          qu_it->second.push_back(ch->xY);
-          qu_it->second.push_back(ch->Xy);
-          qu_it->second.push_back(ch->XY);
         }
       }
       _reached_end = true;
@@ -775,25 +758,8 @@ void QuadTreeNode<T>::traverse(list<QuadTreeElement<T> > & elem_list,
                                list<Rectangle> & quad_list) const
 {
   quad_list.push_back(bbox_);
-  if (children_.size() == 0)
-  {
-    if(is_empty_ == false)
-    {
-      elem_list.push_back(elem);
-    }
-  }
-  else
-  {
-    assert(children_.size()==4);
-    typename list<QuadTreeNode>::const_iterator it =  children_.begin();
-    it->traverse(elem_list, quad_list);
-    ++it;
-    it->traverse(elem_list, quad_list);
-    ++it;
-    it->traverse(elem_list, quad_list);
-    ++it;
-    it->traverse(elem_list, quad_list);
-  }
+  assert(false);
+
 }
 
 }

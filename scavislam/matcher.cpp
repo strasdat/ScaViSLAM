@@ -101,17 +101,17 @@ bool GuidedMatcher<Camera>
                     const typename ALIGNED<Camera>::vector & cam_vec,
                     const tr1::shared_ptr<CandidatePoint<Camera::obs_dim> >
                     & ap,
-                    const ALIGNED<SE3>::int_hash_map & T_me_from_world_map,
+                    const ALIGNED<FrontendVertex>::int_hash_map & vertex_map,
                     Vector2d * uv_pyr,
                     SE3 * T_anchorkey_from_w)
 {
-  ALIGNED<SE3>::int_hash_map::const_iterator it_T
-      = T_me_from_world_map.find(ap->anchor_id);
+  ALIGNED<FrontendVertex>::int_hash_map::const_iterator it_T
+      = vertex_map.find(ap->anchor_id);
 
-  if(it_T==T_me_from_world_map.end())
+  if(it_T==vertex_map.end())
     return false;
 
-  *T_anchorkey_from_w = it_T->second;
+  *T_anchorkey_from_w = it_T->second.T_me_from_w;
 
   SE3 T_cur_from_anchor = T_cur_from_w*T_anchorkey_from_w->inverse();
 
@@ -317,7 +317,7 @@ void GuidedMatcher<Camera>
         const ALIGNED<QuadTree<int> >::vector & feature_tree,
         const typename ALIGNED<Camera>::vector & cam_vec,
         int actkey_id,
-        const ALIGNED<SE3>::int_hash_map & T_me_from_world_map,
+        const ALIGNED<FrontendVertex>::int_hash_map & vertex_map,
         const list< tr1::shared_ptr<CandidatePoint<Camera::obs_dim> > >
         & ap_map,
         int SEARCHRADIUS,
@@ -326,7 +326,7 @@ void GuidedMatcher<Camera>
         TrackData<Camera::obs_dim> * track_data)
 {
   SE3 T_actkey_from_w
-      = GET_MAP_ELEM(actkey_id, T_me_from_world_map);
+      = GET_MAP_ELEM(actkey_id, vertex_map).T_me_from_w;
   SE3 T_w_from_actkey = T_actkey_from_w.inverse();
 
   SE3 T_cur_from_w = T_cur_from_actkey*T_actkey_from_w;
@@ -342,7 +342,7 @@ void GuidedMatcher<Camera>
     bool is_prediction_valid = computePrediction(T_cur_from_w,
                                                  cam_vec,
                                                  ap,
-                                                 T_me_from_world_map,
+                                                 vertex_map,
                                                  &uv_pyr,
                                                  &T_anchorkey_from_w);
     if (is_prediction_valid==false)
@@ -358,13 +358,17 @@ void GuidedMatcher<Camera>
 
     const cv::Mat & kf
         = GET_MAP_ELEM(ap->anchor_id, keyframe_map).pyr.at(ap->anchor_level);
-    Homography homo(T_cur_from_w*T_anchorkey_from_w.inverse());
 
+//    Homography homo(T_cur_from_w*T_anchorkey_from_w.inverse());
+//    cv::Mat key_patch_with_border
+//        = warpPatchProjective(kf, homo, ap->xyz_anchor, ap->normal_anchor,
+//                              ap->anchor_obs_pyr.head(2),
+//                              cam_vec[ap->anchor_level], HALFBOX_SIZE+1);
 
     cv::Mat key_patch_with_border
-        = warpPatchProjective(kf, homo, ap->xyz_anchor, ap->normal_anchor,
-                              ap->anchor_obs_pyr.head(2),
-                              cam_vec[ap->anchor_level], HALFBOX_SIZE+1);
+        =   warpAffinve(kf, T_cur_from_w*T_anchorkey_from_w.inverse(),
+                        ap->xyz_anchor[2], ap->anchor_obs_pyr.head(2),
+                        cam_vec[ap->anchor_level], HALFBOX_SIZE+1);
     cv::Mat key_patch
         = key_patch_with_border(cv::Rect(cv::Point(1,1),
                                          cv::Size(BOX_SIZE, BOX_SIZE)));
@@ -393,6 +397,67 @@ void GuidedMatcher<Camera>
   }
 }
 
+//TODO:
+// - test affine wraper (e.g. for large in-plane rotations)
+// - make it faster by precomputing relevant data
+template <class Camera>
+cv::Mat GuidedMatcher<Camera>
+::warpAffinve                (const cv::Mat & frame,
+                              const SE3 & T_c2_from_c1,
+                              double depth,
+                              const Vector2d & key_uv,
+                              const Camera & cam,
+                              int halfpatch_size)
+{
+  Vector2d f = cam.map(project2d(T_c2_from_c1*(depth*unproject2d(cam.unmap(key_uv)))));
+  Vector2d f_pu = cam.map(project2d(T_c2_from_c1*(depth*unproject2d(cam.unmap(key_uv+Vector2d(1,0))))));
+  Vector2d f_pv = cam.map(project2d(T_c2_from_c1*(depth*unproject2d(cam.unmap(key_uv+Vector2d(0,1))))));
+  Matrix2d A;
+  A.row(0) = f_pu - f; A.row(1) = f_pv - f;
+  Matrix2d inv_A = A.inverse();
+
+  int patch_size = halfpatch_size*2 ;
+  cv::Mat ap_patch(patch_size,patch_size,CV_8UC1);
+
+  for (int ix=0; ix<patch_size; ix++)
+  {
+    for (int iy=0; iy<patch_size; iy++)
+    {
+      Vector2d idx(ix-halfpatch_size,
+                   iy-halfpatch_size);
+      Vector2d r = inv_A*idx + key_uv;
+
+      double x = floor(r[0]);
+      double y = floor(r[1]);
+
+      uint8_t val;
+      if (x<0 || y<0 || x+1>=cam.width() || y+1>=cam.height())
+        val = 0;
+      else
+      {
+        double subpix_x = r[0]-x;
+        double subpix_y = r[1]-y;
+        double wx0 = 1-subpix_x;
+        double wx1 =  subpix_x;
+        double wy0 = 1-subpix_y;
+        double wy1 =  subpix_y;
+
+        double val00 = (frame).at<uint8_t>(y,x);
+        double val01 = (frame).at<uint8_t>(y+1,x);
+        double val10 = (frame).at<uint8_t>(y,x+1);
+        double val11 = (frame).at<uint8_t>(y+1,x+1);
+        val = uint8_t(min(255.,(wx0*wy0)*val00
+                          + (wx0*wy1)*val01
+                          + (wx1*wy0)*val10
+                          + (wx1*wy1)*val11));
+      }
+      ap_patch.at<uint8_t>(iy,ix)= val;
+    }
+  }
+  return ap_patch;
+}
+
+
 template <class Camera>
 cv::Mat GuidedMatcher<Camera>
 ::warpPatchProjective(const cv::Mat & frame,
@@ -412,6 +477,7 @@ cv::Mat GuidedMatcher<Camera>
   Vector2d center_cur = project2d(H_cur_from_key * unproject2d(key_uv));
 
   Matrix3d H_key_from_cur = H_cur_from_key.inverse();
+  cerr << H_key_from_cur << endl;
   cv::Mat ap_patch(patch_size,patch_size,CV_8UC1);
 
   for (int ix=0; ix<patch_size; ix++)
@@ -421,6 +487,12 @@ cv::Mat GuidedMatcher<Camera>
       Vector3d idx(center_cur[0]+ix-halfpatch_size,
                    center_cur[1]+iy-halfpatch_size,1);
       Vector2d r = (project2d(H_key_from_cur*idx));
+
+      if (ix==0 && iy == 0)
+      {
+      //cerr << ix << " " << iy << endl;
+        cerr << r << endl;
+      }
 
       double x = floor(r[0]);
       double y = floor(r[1]);

@@ -36,6 +36,7 @@ struct BackendDrawData
 {
   StereoGraph::WindowTable double_window;
   tr1::unordered_set<int> active_point_set;
+  tr1::unordered_set<int> outer_point_set;
   StereoGraph::VertexTable vertex_table;
   StereoGraph::PointTable  point_table;
   StereoGraph::EdgeTable edge_table;
@@ -162,7 +163,8 @@ private:
                               const tr1::unordered_set<int> &
                               direct_neighbors,
                               list< CandidatePoint3Ptr > * point_list,
-                              ALIGNED<SE3>::int_hash_map * T_me_from_w_table);
+                              ALIGNED<FrontendVertex>::int_hash_map
+                              * vertex_table);
   void
   dumpRegistrationData       (const Frame & root_frame,
                               const IntTable & neighborid_to_strength,
@@ -170,8 +172,8 @@ private:
   bool
   matchAndAlign              (const Frame & root_frame,
                               int rootframe_id,
-                              const ALIGNED<SE3>::int_hash_map
-                              & T_me_from_w_table,
+                              const ALIGNED<FrontendVertex>::int_hash_map
+                              & vertex_table,
                               const list<CandidatePoint3Ptr>
                               & candidate_point_list,
                               SE3 * T_newroot_from_oldroot,
@@ -179,8 +181,8 @@ private:
   void
   keyframesToRegister        (int rootframe_id,
                               const tr1::unordered_set<int> & direct_neighbors,
-                              const ALIGNED<SE3>::int_hash_map
-                              & T_me_from_w_table,
+                              const ALIGNED<FrontendVertex>::int_hash_map
+                              & vertex_table,
                               const SE3 & T_newroot_from_oldroot,
                               const TrackData<3> & track_data,
                               ImageStatsTable  * frameid_to_pointlist,
