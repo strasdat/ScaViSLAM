@@ -114,29 +114,14 @@ cd ../..
 Download and install opencv (version 2.3.1a) inside EXTERNAL:
 
 >>
-wget http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.3.1/OpenCV-2.3.1a.tar.bz2
-tar xvf OpenCV-2.3.1a.tar.bz2
-mv OpenCV-2.3.1 opencv2
+wget http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.4.2/OpenCV-2.4.2.tar.bz2
+tar xvf OpenCV-2.4.2.tar.bz2
+mv OpenCV-2.4.2 opencv2
 cd opencv2
 mkdir svs_build
 cd svs_build
 cmake ..
-<<
-
-If you wish to use CUDA support, which is highly recommended, make
-sure OpenCV recognizes CUDA ("Use Cuda:                   YES"
-in "Other third-party libraries" section). Note that CUDA 4.0 or higher is
-required.
-(For CUDA 4.1, you probably need to install a newer version of OpenCV from the SVN.)
-
->>
 make -j8
-<<
-
-In case you get an compiler error in "cap_ffmpeg.cpp", simply 
-deactivate "USE_FFMPEF", e.g. using cmake-gui.
-
->>
 cd ../..
 <<
 
