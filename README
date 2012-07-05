@@ -68,7 +68,7 @@ Now, checkout/clone the ScaViSLAM repository.
 
 >>
 cd MY_SOFTWARE_DIRECTORY
-git clone git@github.com:strasdat/ScaViSLAM.git
+git clone git://github.com/strasdat/ScaViSLAM.git
 <<
 
 Now, enter the project directory
@@ -102,7 +102,7 @@ mv eigen-eigen-ca142d0540d3 eigen3.1
 Check out and install g2o (fork with slightly modified cmake file):
 
 >>
-git clone git@github.com:strasdat/g2o.git
+git clone git://github.com/strasdat/g2o.git
 cd g2o
 mkdir svs_build
 cd svs_build
@@ -127,6 +127,7 @@ If you wish to use CUDA support, which is highly recommended, make
 sure OpenCV recognizes CUDA ("Use Cuda:                   YES"
 in "Other third-party libraries" section). Note that CUDA 4.0 or higher is
 required.
+(For CUDA 4.1, you probably need to install a newer version of OpenCV from the SVN.)
 
 >>
 make -j8
@@ -139,12 +140,11 @@ deactivate "USE_FFMPEF", e.g. using cmake-gui.
 cd ../..
 <<
 
-Clone and install Pangolin (68d75c2d54450d90efd2e6e2cfcd72a6a599ef58)
+Clone and install Pangolin
 
 >>
-git  clone -v https://github.com/stevenlovegrove/Pangolin.git
+git  clone git://github.com/stevenlovegrove/Pangolin.git
 cd Pangolin
-git checkout 5db1df
 mkdir svs_build
 cd svs_build
 cmake ..
@@ -155,7 +155,7 @@ cd ../..
 Clone and install Sophus in folder EXTERNAL
 
 >>
-git clone git@github.com:strasdat/Sophus.git
+git clone git://github.com/strasdat/Sophus.git
 cd Sophus
 mkdir svs_build
 cd svs_build
@@ -167,7 +167,7 @@ cd ../..
 Install VisionTools in folder EXTERNAL
 
 >>
-git clone git@github.com:strasdat/VisionTools.git
+git clone git://github.com/strasdat/VisionTools.git
 cd VisionTools
 mkdir svs_build
 cd svs_build
@@ -185,8 +185,8 @@ cmake ..
 make -j8
 <<
 
-In case you would like to compile ScaViSLAM WITHOUT CUDA support, type
-"cmake -DCUDA_SUPPORT=OFF .." instead of "cmake .."
+In case you would like to compile ScaViSLAM WITHOUT CUDA support, 
+turn CUDA_SUPPORT to OFF in the CMakeLists.txt file.
 
 Make sure the "New College" data set is downloaded completely.
 Then add a sym-link inside "ScaViSLAM/data":
