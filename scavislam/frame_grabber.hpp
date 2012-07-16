@@ -22,7 +22,7 @@
 #include <boost/thread.hpp>
 
 #include <opencv2/opencv.hpp>
-#include <pangolin/firewire.h>
+#include <pangolin/video.h>
 
 #ifdef SCAVISLAM_CUDA_SUPPORT
 #include <opencv2/gpu/gpu.hpp>
