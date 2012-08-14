@@ -58,11 +58,13 @@ Thus, there is an optional dependency on CUDA 4.1 or higher.
 Next, install dependencies:
 
 >>
-sudo apt-get install freeglut3-dev libglu-dev libglew-dev libboost-all-dev
+sudo apt-get install libeigen3-dev libsuitesparse-dev freeglut3-dev libglu-dev libglew-dev libboost-all-dev
 <<
 
-(This is an incomplete list at the moment, since it is hard to guess which 
- libraries are installed by default on your linux distribution...)
+Important: Make sure libsuitesparse-dev is installed before you install g2o.
+
+(If you use an older linux version, you might have to install eigen3 manually
+from: http://eigen.tuxfamily.org)
 
 Now, checkout/clone the ScaViSLAM repository.
 
@@ -90,50 +92,43 @@ version conflicts (e.g. different OpenCV version which might be installed
 system-wide). Please follow the guide step by step and only deviate form 
 it if you really know what you are doing ;-)
 
-Download Eigen (version 3.1) in folder EXTERNAL
-
->>
-wget http://bitbucket.org/eigen/eigen/get/3.1.0.tar.gz
-
-tar xvf 3.1.0.tar.gz
-mv eigen-eigen-ca142d0540d3 eigen3.1
-<<
-
-Check out and install g2o (fork with slightly modified cmake file):
+Check out and install g2o:
 
 >>
 git clone git://github.com/strasdat/g2o.git
 cd g2o
 mkdir svs_build
 cd svs_build
-cmake ..
-make -j8
+cmake .. -DCMAKE_INSTALL_PREFIX:PATH=..
+make -j4
+make install
 cd ../..
 <<
 
-Download and install opencv (version 2.3.1a) inside EXTERNAL:
+Download and install opencv (version 2.4.2) inside EXTERNAL:
 
 >>
 wget http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.4.2/OpenCV-2.4.2.tar.bz2
 tar xvf OpenCV-2.4.2.tar.bz2
-mv OpenCV-2.4.2 opencv2
-cd opencv2
+cd OpenCV-2.4.2
 mkdir svs_build
 cd svs_build
-cmake ..
-make -j8
+cmake .. -DCMAKE_INSTALL_PREFIX:PATH=../..
+make -j4
+make install
 cd ../..
 <<
 
-Clone and install Pangolin
+Clone and install Pangolin inside EXTERNAL
 
 >>
 git  clone git://github.com/stevenlovegrove/Pangolin.git
 cd Pangolin
 mkdir svs_build
 cd svs_build
-cmake ..
-make -j8
+cmake .. -DCMAKE_INSTALL_PREFIX:PATH=.. -DBUILD_SHARED_LIBS=ON
+make -j4
+make install
 cd ../..
 <<
 
@@ -144,8 +139,9 @@ git clone git://github.com/strasdat/Sophus.git
 cd Sophus
 mkdir svs_build
 cd svs_build
-cmake ..
-make -j8
+cmake .. -DCMAKE_INSTALL_PREFIX:PATH=..
+make -j4
+make install
 cd ../..
 <<
 
@@ -156,8 +152,8 @@ git clone git://github.com/strasdat/VisionTools.git
 cd VisionTools
 mkdir svs_build
 cd svs_build
-cmake ..
-make -j8
+cmake .. -DCMAKE_PREFIX_PATH:PATH=..
+make -j4
 <<
 
 Move to main project folder "ScaViSLAM" and install ScaViSLAM:
@@ -166,8 +162,8 @@ Move to main project folder "ScaViSLAM" and install ScaViSLAM:
 cd ../../../
 mkdir svs_build
 cd svs_build
-cmake ..
-make -j8
+cmake .. -DCMAKE_PREFIX_PATH:PATH=EXTERNAL/
+make -j4
 <<
 
 In case you would like to compile ScaViSLAM WITHOUT CUDA support, 
@@ -189,6 +185,10 @@ cd ../svs_build
 
 
 *** HOW TO USE A RGB-D CAMERA? ***
+
+First note, that the use of RGB-D cameras in ScaViSLAM is not very well tested and
+very experimental! (ScaViSLAM is well tested in stereo-camera mode on the New College
+seqeunce.)
 
 At the moment, only RGB-D cameras following the PrimeSense reference design
 (e.g. Ausus Xtion PRO LIVE) are supported.

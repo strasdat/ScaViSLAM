@@ -56,38 +56,15 @@ ENDIF()
 
 
 
-SET (INCLUDE_DIRS "EXTERNAL/eigen3.1/"
-                  "EXTERNAL/opencv2/include/opencv"
-                  "EXTERNAL/opencv2/include/"
-                  "EXTERNAL/opencv2/modules/core/include"
-                  "EXTERNAL/opencv2/modules/imgproc/include"
-                  "EXTERNAL/opencv2/modules/video/include"
-                  "EXTERNAL/opencv2/modules/features2d/include"
-                  "EXTERNAL/opencv2/modules/flann/include"
-                  "EXTERNAL/opencv2/modules/objdetect/include"
-                  "EXTERNAL/opencv2/modules/photo/include"
-                  "EXTERNAL/opencv2/modules/nonfree/include"
-                  "EXTERNAL/opencv2/modules/calib3d/include"
-                  "EXTERNAL/opencv2/modules/ml/include"
-                  "EXTERNAL/opencv2/modules/highgui/include"
-                  "EXTERNAL/opencv2/modules/legacy/include"
-                  "EXTERNAL/opencv2/modules/contrib/include"
-                  "EXTERNAL/g2o/svs_build"
-                  "EXTERNAL/g2o/"
-                  "EXTERNAL/g2o/EXTERNAL/csparse/"
-                  "EXTERNAL/Pangolin/"
-                  "EXTERNAL/Pangolin/svs_build"
-                  "EXTERNAL/Sophus"
-                  "EXTERNAL/VisionTools")
+SET (INCLUDE_DIRS "EXTERNAL/include/"
+                  "EXTERNAL/VisionTools"
+                  "/usr/include/eigen3"
+                  "/usr/include/suitesparse")
 
-LIST(APPEND CMAKE_LIBRARY_PATH EXTERNAL/g2o/lib
-                               EXTERNAL/opencv2/svs_build/lib/
-                               EXTERNAL/Pangolin/svs_build/pangolin
-                               EXTERNAL/Sophus/svs_build/
-                               EXTERNAL/VisionTools/svs_build/)
+LIST(APPEND CMAKE_LIBRARY_PATH EXTERNAL/VisionTools/svs_build/)
 
-SET (LIB_NAMES GL pangolin glut g2o_stuff g2o_core g2o_solver_csparse
-               VisionTools Sophus 
+SET (LIB_NAMES GL pangolin glut g2o_stuff g2o_core g2o_solver_csparse csparse
+               g2o_csparse_extension  VisionTools Sophus
                boost_system boost_thread boost_filesystem boost_regex
                opencv_core opencv_features2d opencv_flann opencv_gpu
                opencv_nonfree

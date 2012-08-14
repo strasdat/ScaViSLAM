@@ -441,20 +441,18 @@ void draw(int loop_id,
   }
   SE3 T_cur_from_world
       = modules->frontend->T_cur_from_actkey()*T_actkey_from_world;
-  const pangolin::OpenGlMatrixSpec & gl_projection =
-      GET_MAP_ELEM((pangolin::OpenGlStack)(GL_PROJECTION),
-                   views->pangolin_cam.stacks);
-  pangolin::OpenGlMatrixSpec gl_modelview =
-      GET_MAP_ELEM((pangolin::OpenGlStack)(GL_MODELVIEW),
-                   views->pangolin_cam.stacks);
+  const pangolin::OpenGlMatrix & gl_projection =
+       views->pangolin_cam.GetProjectionMatrix();
+  pangolin::OpenGlMatrix gl_modelview =
+                        views->pangolin_cam.GetModelViewMatrix();
   Map<Matrix<double,4,4,ColMajor> > Map_gl_modelview(&gl_modelview.m[0]);
 
   Map_gl_modelview
       = Map_gl_modelview*T_cur_from_world.matrix();
 
   pangolin::OpenGlRenderState r_state;
-  r_state.Set(gl_projection);
-  r_state.Set(gl_modelview);
+  r_state.SetProjectionMatrix(gl_projection);
+  r_state.SetModelViewMatrix(gl_modelview);
   views->v3d->ActivateScissorAndClear(r_state);
   glClearColor(1,1,1,0);
   glEnable(GL_DEPTH_TEST);

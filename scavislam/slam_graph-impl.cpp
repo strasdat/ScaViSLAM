@@ -20,6 +20,8 @@
 #include "stereo_camera.h"
 #include "transformations.h"
 
+#include <g2o/core/robust_kernel_impl.h>
+
 namespace ScaViSLAM
 {
 
@@ -81,8 +83,11 @@ void SlamGraph<SE3,StereoCamera, SE3XYZ_STEREO, 3>
   e->setMeasurement(obs);
   e->information() = Lambda;
 
-  e->setRobustKernel(robustify);
-  e->setHuberWidth(huber_kernel_width);
+  if (robustify)
+  {
+    g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
+    e->setRobustKernel(rk);
+  }
 
   e->resizeParameters(1);
   bool param_status = e->setParameterId(0, 0);
@@ -178,8 +183,15 @@ void SlamGraph<Sim3,LinearCamera, Sim3XYZ, 2>
   e->inverseMeasurement() = -obs;
   e->information() = Lambda;
 
-  e->setRobustKernel(robustify);
-  e->setHuberWidth(huber_kernel_width);
+  if (robustify)
+  {
+    g2o::RobustKernelHuber* rk = new g2o::RobustKernelHuber;
+    e->setRobustKernel(rk);
+  }
+
+  e->resizeParameters(1);
+  bool param_status = e->setParameterId(0, 0);
+  assert(param_status);
 
   optimizer->addEdge(e);
 }

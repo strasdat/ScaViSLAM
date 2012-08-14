@@ -184,7 +184,7 @@ void Backend
 
       monitor.pushNeighborhood(neighborhood_ptr);
       if (do_optimization)
-        graph_.optimize(OptParams(1,true,3));
+        graph_.optimize(OptParams(2,true,3));
     }
 
     if (local_registration_stack.size()>0)
@@ -194,7 +194,7 @@ void Backend
       if(localRegisterFrame(frame_id))
       {
         if(graph_.prepareForOptimization(frame_id,-1))
-          graph_.optimize(OptParams(1,true,3));
+          graph_.optimize(OptParams(2,true,3));
       }
     }
 
@@ -214,7 +214,7 @@ void Backend
           monitor.pushClosedLoop(loop);
           if(graph_.prepareForOptimization(loop.query_keyframe_id,
                                            loop.loop_keyframe_id))
-            graph_.optimize(OptParams(1,true,3));
+            graph_.optimize(OptParams(2,true,3));
         }
       }
     }

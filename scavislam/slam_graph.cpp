@@ -914,6 +914,7 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
 
   v_point->setId(g2o_point_id);
   v_point->setEstimate(invert_depth(psi_anchor));
+  v_point->setMarginalized(true);
 
   optimizer->addVertex(v_point);
 }
@@ -1063,10 +1064,10 @@ void SlamGraph<Pose,Cam,Proj,ObsDim>
            g2o::SparseOptimizer * optimizer)
 {
   optimizer->setVerbose(true);
-  typename g2o::BlockSolverX::LinearSolverType * linearSolver
-      = SlamGraphMethods::allocateLinearSolver<g2o::BlockSolverX>();
-  g2o::BlockSolverX * block_solver
-      = new g2o::BlockSolverX(linearSolver);
+  typename g2o::BlockSolver_6_3::LinearSolverType * linearSolver
+      = SlamGraphMethods::allocateLinearSolver<g2o::BlockSolver_6_3>();
+  g2o::BlockSolver_6_3 * block_solver
+      = new g2o::BlockSolver_6_3(linearSolver);
   g2o::OptimizationAlgorithmLevenberg * lm
       = new g2o::OptimizationAlgorithmLevenberg(block_solver);
   lm->setMaxTrialsAfterFailure(5);
