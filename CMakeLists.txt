@@ -5,6 +5,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
     "${PROJECT_SOURCE_DIR}/CMakeModules/")
 
+SET (OpenCV_DIR ${CMAKE_PREFIX_PATH}/share/OpenCV)
+
 SET (CMAKE_VERBOSE_MAKEFILE ON)
 
 IF(NOT CUDA_SUPPORT)
@@ -54,12 +56,11 @@ IF (CMAKE_COMPILER_IS_GNUCXX )
                    -Wno-unused-but-set-variable -Wno-unknown-pragmas")
 ENDIF()
 
-
-
-SET (INCLUDE_DIRS "EXTERNAL/include/"
-                  "EXTERNAL/VisionTools"
-                  "/usr/include/eigen3"
-                  "/usr/include/suitesparse")
+FIND_PACKAGE(OpenCV REQUIRED)
+FIND_PACKAGE(SuiteSparse REQUIRED)
+FIND_PACKAGE(Eigen3 REQUIRED)
+LIST(APPEND INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR} 
+                         ${CSPARSE_INCLUDE_DIR})
 
 LIST(APPEND CMAKE_LIBRARY_PATH EXTERNAL/VisionTools/svs_build/)
 

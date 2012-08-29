@@ -66,7 +66,16 @@ Important: Make sure libsuitesparse-dev is installed before you install g2o.
 (If you use an older linux version, you might have to install eigen3 manually
 from: http://eigen.tuxfamily.org)
 
-Now, checkout/clone the ScaViSLAM repository.
+
+In order to avoid version conflicts, I would very much recommend to install all  
+libraries locally in your home directory and not system wide. So create 
+a sub-directory in your home, e.g. 
+
+>>
+mkdir $HOME/svslocal 
+<<
+
+Now checkout/clone the ScaViSLAM repository.
 
 >>
 cd MY_SOFTWARE_DIRECTORY
@@ -86,12 +95,6 @@ mkdir EXTERNAL
 cd EXTERNAL
 <<
 
-The ScaViSLAM build system is designed in a way such that all 
-dependencies are installed locally in a sub-folder. In this way we avoid
-version conflicts (e.g. different OpenCV version which might be installed
-system-wide). Please follow the guide step by step and only deviate form 
-it if you really know what you are doing ;-)
-
 Check out and install g2o:
 
 >>
@@ -99,7 +102,7 @@ git clone git://github.com/strasdat/g2o.git
 cd g2o
 mkdir svs_build
 cd svs_build
-cmake .. -DCMAKE_INSTALL_PREFIX:PATH=..
+cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/svslocal
 make -j4
 make install
 cd ../..
@@ -113,7 +116,7 @@ tar xvf OpenCV-2.4.2.tar.bz2
 cd OpenCV-2.4.2
 mkdir svs_build
 cd svs_build
-cmake .. -DCMAKE_INSTALL_PREFIX:PATH=../..
+cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/svslocal
 make -j4
 make install
 cd ../..
@@ -122,11 +125,11 @@ cd ../..
 Clone and install Pangolin inside EXTERNAL
 
 >>
-git  clone git://github.com/stevenlovegrove/Pangolin.git
+git  clone git://github.com/strasdat/Pangolin.git
 cd Pangolin
 mkdir svs_build
 cd svs_build
-cmake .. -DCMAKE_INSTALL_PREFIX:PATH=.. -DBUILD_SHARED_LIBS=ON
+cmake .. -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX:PATH=$HOME/svslocal
 make -j4
 make install
 cd ../..
@@ -139,7 +142,7 @@ git clone git://github.com/strasdat/Sophus.git
 cd Sophus
 mkdir svs_build
 cd svs_build
-cmake .. -DCMAKE_INSTALL_PREFIX:PATH=..
+cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/svslocal
 make -j4
 make install
 cd ../..
@@ -152,8 +155,9 @@ git clone git://github.com/strasdat/VisionTools.git
 cd VisionTools
 mkdir svs_build
 cd svs_build
-cmake .. -DCMAKE_PREFIX_PATH:PATH=..
+cmake .. -DCMAKE_PREFIX_PATH:PATH=$HOME/svslocal -DCMAKE_INSTALL_PREFIX:PATH=$HOME/svslocal
 make -j4
+make install
 <<
 
 Move to main project folder "ScaViSLAM" and install ScaViSLAM:
@@ -162,7 +166,7 @@ Move to main project folder "ScaViSLAM" and install ScaViSLAM:
 cd ../../../
 mkdir svs_build
 cd svs_build
-cmake .. -DCMAKE_PREFIX_PATH:PATH=EXTERNAL/
+cmake .. -DCMAKE_PREFIX_PATH:PATH=$HOME/svslocal
 make -j4
 <<
 
@@ -229,7 +233,7 @@ files "../data/rgbd_example.cfg". Basically, you have to point
 "framepipe.path_str" to the saved images.
 
 
-*** WHAT ABOUT STANDARD STEREO CAMERAS? ***
+*** WHAT ABOUT LIVE STEREO CAMERAS? ***
 
 This is more tricky since we need to make sure that the image stream is 
 rectified. Some adaptation in the code might be necessary...
