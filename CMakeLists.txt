@@ -52,7 +52,7 @@ IF (CMAKE_COMPILER_IS_GNUCXX )
     SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -g")
     MESSAGE ("SSE 4.1  SUPPORT OFF")
   ENDIF()
-  ADD_DEFINITIONS("-Wall -Werror -Wno-unused-variable
+  ADD_DEFINITIONS("-Wall -Wno-unused-variable
                    -Wno-unused-but-set-variable -Wno-unknown-pragmas")
 ENDIF()
 

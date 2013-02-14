@@ -196,13 +196,16 @@ seqeunce.)
 
 At the moment, only RGB-D cameras following the PrimeSense reference design
 (e.g. Ausus Xtion PRO LIVE) are supported.
-First, you need to install PCL (which includes OpenNI):
+First, you need to install PCL 1.2 (which includes OpenNI):
 
 >>
-sudo add-apt-repository ppa:v-launchpad-jochen-sprickerhof-de/pcl
-sudo apt-get update
-sudo apt-get install libpcl-all
+svn co http://svn.pointclouds.org/pcl/tags/pcl-1.2/
+cd pcl-1.2 && mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release .. 
+make
+sudo make install
 <<
+Having newer versions of PCL installed may cause errors.
 
 Reinstall ScaViSLAM with PCL support:
 
@@ -211,7 +214,7 @@ cd MY_SOFTWARE_DIRECTORY
 cd /ScaViSLAM/
 mkdir svs_build_with_pcl
 cd svs_build_with_pcl
-cmake  -DPCL_SUPPORT=ON ..
+cmake  -DPCL_SUPPORT=ON .. -DCMAKE_PREFIX_PATH:PATH=$HOME/svslocal
 make -j8
 >>
 
