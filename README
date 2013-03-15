@@ -50,6 +50,10 @@ wget -nH --cut-dirs=4 -r -l2 --no-parent -A "*.pnm" http://pub1.willowgarage.com
 wget -nH --cut-dirs=4 -r -l2 --no-parent -A "*.pnm" http://pub1.willowgarage.com/~konolige/data/NewCollege/FullData/StereoImages_1225720193.298630_to_1225720268.945303
 <<
 
+If you want to download a larger portion of the data, see the index at
+
+http://pub1.willowgarage.com/~konolige/data/NewCollege/FullData/
+
 Before we start with the installation, we need to perform some preparations.
 ScaViSLAM comes with GPU support. Indeed, GPU support is the default option.
 (Each GPU method has a CPU equivalent. However those are not tested very much).
@@ -140,6 +144,7 @@ Clone and install Sophus in folder EXTERNAL
 >>
 git clone git://github.com/strasdat/Sophus.git
 cd Sophus
+git checkout a621ff
 mkdir svs_build
 cd svs_build
 cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/svslocal
@@ -178,8 +183,12 @@ Then add a sym-link inside "ScaViSLAM/data":
 
 >>
 cd ../data
-ln -s PATH_TO_MY_DATA_DIRECTORY/newcollege newcollege
+ln -s PATH_TO_MY_DATA_DIRECTORY/newcollege/(subdirectory) newcollege
 <<
+
+Where subdirectory contains the image sequence directory.  
+If you want to run a longer sequence, consolidate the files into a
+single directory.
 
 Run ScaViSLAM on new college image sequence:
 >>
