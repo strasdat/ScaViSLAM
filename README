@@ -45,14 +45,16 @@ http://www.robots.ox.ac.uk/NewCollegeData/)
 cd MY_DATA_DIRECTORY
 mkdir newcollege
 cd newcollege
-wget -nH --cut-dirs=4 -r -l2 --no-parent -A "*.pnm" http://pub1.willowgarage.com/~konolige/data/NewCollege/FullData/StereoImages_1225720041.455302_to_1225720118.251935 
-wget -nH --cut-dirs=4 -r -l2 --no-parent -A "*.pnm" http://pub1.willowgarage.com/~konolige/data/NewCollege/FullData/StereoImages_1225720118.301927_to_1225720193.248630
-wget -nH --cut-dirs=4 -r -l2 --no-parent -A "*.pnm" http://pub1.willowgarage.com/~konolige/data/NewCollege/FullData/StereoImages_1225720193.298630_to_1225720268.945303
+wget http://www.robots.ox.ac.uk/NewCollegeData/Data/FullData/StereoImages/StereoImages_1225720041.455302_to_1225720118.251935.tgz
+wget http://www.robots.ox.ac.uk/NewCollegeData/Data/FullData/StereoImages/StereoImages_1225720118.301927_to_1225720193.248630.tgz 
+wget http://www.robots.ox.ac.uk/NewCollegeData/Data/FullData/StereoImages/StereoImages_1225720193.298630_to_1225720268.945303.tgz
+find . -name "StereoImages*.tgz" -exec tar xzvf '{}' --strip-components=1 \;
+rm StereoImages*.tgz
 <<
 
 If you want to download a larger portion of the data, see the index at
 
-http://pub1.willowgarage.com/~konolige/data/NewCollege/FullData/
+http://www.robots.ox.ac.uk/NewCollegeData/index.php?n=Main.Downloads#Full
 
 Before we start with the installation, we need to perform some preparations.
 ScaViSLAM comes with GPU support. Indeed, GPU support is the default option.
@@ -112,12 +114,12 @@ make install
 cd ../..
 <<
 
-Download and install opencv (version 2.4.2) inside EXTERNAL:
+Download and install opencv (version 2.4.13.2) inside EXTERNAL:
 
 >>
-wget http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.4.2/OpenCV-2.4.2.tar.bz2
-tar xvf OpenCV-2.4.2.tar.bz2
-cd OpenCV-2.4.2
+wget https://github.com/opencv/opencv/archive/2.4.13.2.tar.gz
+tar xzvf 2.4.13.2.tar.gz
+cd opencv-2.4.13.2/
 mkdir svs_build
 cd svs_build
 cmake .. -DCMAKE_INSTALL_PREFIX:PATH=$HOME/svslocal
